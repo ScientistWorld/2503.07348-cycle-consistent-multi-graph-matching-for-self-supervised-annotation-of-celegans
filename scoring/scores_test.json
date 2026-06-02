@@ -15,27 +15,27 @@
       ],
       "results": {
         "unlearned_linear_baseline": {
-          "atlas_accuracy_mean": 0.78125,
-          "atlas_accuracy_min": 0.5625,
-          "atlas_accuracy_std": 0.15720541233261237,
+          "atlas_accuracy_mean": 0.6583034647550777,
+          "atlas_accuracy_min": 0.4659498207885305,
+          "atlas_accuracy_std": 0.13602243671661465,
           "invalid_assignment_rate": 0.0,
-          "gap_to_supervised_oracle": 0.09999999999999998
+          "gap_to_supervised_oracle": 0.11170848267622446
         },
         "our_unsupervised_atlas": {
-          "atlas_accuracy_mean": 0.8729166666666668,
-          "atlas_accuracy_min": 0.70625,
-          "atlas_accuracy_std": 0.11829224638815322,
+          "atlas_accuracy_mean": 0.7037037037037037,
+          "atlas_accuracy_min": 0.496415770609319,
+          "atlas_accuracy_std": 0.14854986580444596,
           "invalid_assignment_rate": 0.0,
-          "pre_atlas_accuracy_mean": 0.9760416666666667,
-          "pre_atlas_accuracy_std": 0.03597899174827198,
-          "atlas_minus_preatlas": -0.10312499999999991,
-          "gap_to_supervised_oracle": 0.008333333333333193,
+          "pre_atlas_accuracy_mean": 0.8142174432497012,
+          "pre_atlas_accuracy_std": 0.09728265175504103,
+          "atlas_minus_preatlas": -0.11051373954599752,
+          "gap_to_supervised_oracle": 0.06630824372759847,
           "semantic_labels_used_for_training": 0.0
         },
         "supervised_oracle_atlas": {
-          "atlas_accuracy_mean": 0.88125,
-          "atlas_accuracy_min": 0.7125,
-          "atlas_accuracy_std": 0.11935154656168753,
+          "atlas_accuracy_mean": 0.7700119474313022,
+          "atlas_accuracy_min": 0.546594982078853,
+          "atlas_accuracy_std": 0.15797965123283678,
           "invalid_assignment_rate": 0.0
         }
       }
