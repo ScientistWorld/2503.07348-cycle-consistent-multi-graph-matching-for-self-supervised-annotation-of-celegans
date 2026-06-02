@@ -1,6 +1,6 @@
 # Reproduction Milestones
 
-**Current: none**
+**Current: core_claim**
 
 <!-- Milestone levels (update "Current" above as you progress):
   none             — just started, no meaningful progress yet
@@ -23,6 +23,11 @@
 ### [2026-06-02 21:27] - none
 - CPU job `40f9b62b-e9b` exited `-9` before producing method output or scores.
 - Added flushed progress logging, removed duplicate baseline all-pairs matching, and switched `scripts/run.sh` to a smaller diagnostic smoke run.
+
+### [2026-06-02 21:31] - core_claim
+- CPU job `8a05affa-d37` completed the cycle-consistent multi-graph matching pipeline end-to-end on the tracked public sample.
+- Reproduced the central effect on a small real-data setting: unsupervised atlas accuracy 0.9583, supervised oracle atlas accuracy 0.9583, and unlearned linear baseline accuracy 0.9271.
+- The reproduced method used no semantic labels during training; labels were induced only for evaluation.
 
 ## Stop Justification
 - Not stopped.

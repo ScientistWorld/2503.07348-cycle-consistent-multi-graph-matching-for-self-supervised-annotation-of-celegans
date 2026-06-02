@@ -30,5 +30,5 @@
 action: submit
 gpus: 0
 test: true
-milestone: none
-notes: "Retry as a smaller CPU diagnostic: run scripts/smoke.sh with 4 train worms, 2 test worms, 48 cells, and flushed progress logging, then evaluate and validate scores."
+milestone: core_claim
+notes: "Run a medium scaled CPU setting for core_claim_plus: scripts/scaled_core.sh with 8 train worms, 4 test worms, 96 cells, and 2 trials per learning stage, then evaluate and validate scores."
