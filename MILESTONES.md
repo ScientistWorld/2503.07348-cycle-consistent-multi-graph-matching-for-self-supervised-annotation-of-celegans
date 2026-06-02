@@ -15,7 +15,10 @@
 
 ## Progress Log
 
-<!-- Write your progress here -->
+### [2026-06-02 20:51] - none
+- Read the paper and identified the core claim: unsupervised cycle-consistent multi-graph matching builds a C. elegans atlas with near-supervised annotation accuracy.
+- Added a scaled implementation using Gaussian unary/quadratic matching costs, parameter search, synchronization into cliques, unsupervised atlas construction, and atlas-to-worm evaluation on the public preprocessed cellmatch sample.
+- Prepared a CPU smoke job to run the method end-to-end; milestone remains `none` until the job result confirms execution.
 
 ## Stop Justification
-- Completed at milestone `none`.
+- Not stopped.

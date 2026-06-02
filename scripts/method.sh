@@ -10,5 +10,6 @@ set -e
 
 cd /home/user
 
-# TODO: run the paper's method
-# TODO: call scripts/evaluate.sh to score
+mkdir -p outputs/method
+python -m method.cycle_mgm "$@"
+bash scripts/evaluate.sh outputs/method/predictions.json

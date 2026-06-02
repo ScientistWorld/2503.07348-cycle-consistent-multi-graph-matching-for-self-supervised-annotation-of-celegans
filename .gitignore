@@ -227,6 +227,7 @@ core.*
 environment/overlay.img
 jobs/
 tmp/
+.git-shims/
 protocol.md
 *.egg-info
 core.[0-9]*

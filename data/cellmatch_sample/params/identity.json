@@ -1,0 +1,62 @@
+{
+    "nuclei_neighbor_count": 3,
+    "unassignment_cost": -10000,
+    "w_spatial_dist": 1.0,
+    "w_shape_dist": 1.0,
+    "w_pairwise_dist": 1.0,
+    "min_number_assignments": 17,
+    "max_number_assignments": 1000,
+    "max_spatial_dist": 379.32,
+    "max_shape_dist": 142.028,
+    "_inv_cov_spatial_dist": [
+        [
+            1.0,
+            0.0,
+            0.0
+        ],
+        [
+            0.0,
+            1.0,
+            0.0
+        ],
+        [
+            0.0,
+            0.0,
+            1.0
+        ]
+    ],
+    "_inv_cov_shape_dist": [
+        [
+            1.0,
+            0.0,
+            0.0
+        ],
+        [
+            0.0,
+            1.0,
+            0.0
+        ],
+        [
+            0.0,
+            0.0,
+            1.0
+        ]
+    ],
+    "_inv_cov_pairwise_dist": [
+        [
+            1.0,
+            0.0,
+            0.0
+        ],
+        [
+            0.0,
+            1.0,
+            0.0
+        ],
+        [
+            0.0,
+            0.0,
+            1.0
+        ]
+    ]
+}

@@ -26,5 +26,5 @@ cd /home/user
 
 mkdir -p scoring
 
-# TODO: implement evaluation using code in eval/
-# Must write scoring/scores.json at the end
+PREDICTIONS="${1:-outputs/method/predictions.json}"
+python -m eval.evaluate_outputs "$PREDICTIONS" --output scoring/scores.json

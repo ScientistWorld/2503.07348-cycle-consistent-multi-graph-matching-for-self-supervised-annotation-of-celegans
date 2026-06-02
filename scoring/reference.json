@@ -1,0 +1,45 @@
+{
+  "experiments": {
+    "scaled_manual_segmentation": {
+      "description": "Manual-segmentation C. elegans atlas annotation. Paper numbers are from the 100-train/100-test main setting and training-set ablations; this workspace runs the same evaluation on the tracked preprocessed sample.",
+      "weight": 1.0,
+      "primary_metric": "atlas_accuracy_mean",
+      "metrics": {
+        "atlas_accuracy_mean": {"higher_is_better": true, "coefficient": 1.0},
+        "atlas_accuracy_std": {"higher_is_better": false, "coefficient": -0.1},
+        "pre_atlas_accuracy_mean": {"higher_is_better": true, "coefficient": 0.4},
+        "pre_atlas_accuracy_std": {"higher_is_better": false, "coefficient": -0.05},
+        "atlas_minus_preatlas": {"higher_is_better": true, "coefficient": 0.2},
+        "gap_to_supervised_oracle": {"higher_is_better": false, "coefficient": -0.5},
+        "semantic_labels_used_for_training": {"higher_is_better": false, "coefficient": -1.0}
+      },
+      "results": {
+        "unlearned_linear_baseline": {
+          "type": "baseline",
+          "atlas_accuracy_mean": 0.955,
+          "atlas_accuracy_std": 0.031,
+          "pre_atlas_accuracy_mean": 0.949,
+          "pre_atlas_accuracy_std": 0.033,
+          "atlas_minus_preatlas": 0.006,
+          "semantic_labels_used_for_training": 0.0
+        },
+        "our_unsupervised_atlas": {
+          "type": "proposed",
+          "atlas_accuracy_mean": 0.961,
+          "atlas_accuracy_std": 0.020,
+          "pre_atlas_accuracy_mean": 0.966,
+          "pre_atlas_accuracy_std": 0.016,
+          "atlas_minus_preatlas": 0.006,
+          "gap_to_supervised_oracle": 0.003,
+          "semantic_labels_used_for_training": 0.0
+        },
+        "supervised_oracle_atlas": {
+          "type": "baseline",
+          "atlas_accuracy_mean": 0.964,
+          "atlas_accuracy_std": 0.019,
+          "semantic_labels_used_for_training": 1.0
+        }
+      }
+    }
+  }
+}

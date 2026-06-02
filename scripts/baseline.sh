@@ -17,4 +17,6 @@ set -e
 
 cd /home/user
 
-# TODO: run baseline
+mkdir -p outputs/baseline
+python -m baseline.unlearned_linear --output outputs/baseline/predictions.json
+bash scripts/evaluate.sh outputs/baseline/predictions.json

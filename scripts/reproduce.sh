@@ -18,7 +18,11 @@ set -e
 
 cd /home/user
 
-# TODO: implement full reproduction pipeline
-# e.g.:
-#   bash scripts/baseline.sh
-#   bash scripts/method.sh
+bash scripts/method.sh \
+  --output outputs/method/predictions.json \
+  --train-worms 12 \
+  --learn-worms 6 \
+  --test-worms 6 \
+  --cells 160 \
+  --trials 6 \
+  --seed 7
