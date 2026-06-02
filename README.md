@@ -19,10 +19,6 @@ The task is to assign consistent biological names to hundreds of nuclei in 3D wo
 
 # Problem Definition
 
-What problem does this paper address? Write this so that someone with no knowledge of the paper can understand what needs to be solved and how success is measured.
-
-Do NOT describe the paper's method or solution here — only the problem itself. Think about if a future scientist agent try to solve this problem from scratch without knowing what approach the paper took. If you leak the solution, you compromise the benchmark.
-
 ## Research Question
 
 How can cell nuclei in 3D C. elegans microscopy images be assigned consistent biological identities across animals when manual semantic annotations are scarce or unavailable?
@@ -33,7 +29,7 @@ Cell-level identity maps let biologists compare gene expression and morphology a
 
 ## Success Criteria
 
-A successful system builds a reusable atlas from segmented nuclei, assigns atlas identities to target worms with high per-cell accuracy, remains close to a supervised atlas in accuracy, and does not use target-test labels during training or model selection.
+A successful system builds a reusable identity reference from segmented nuclei, assigns identities to held-out worms with high per-cell accuracy, remains close to an otherwise comparable supervised reference in accuracy, and does not use held-out labels during training or model selection.
 
 ---
 
@@ -57,13 +53,11 @@ Primary: an unsupervised atlas built from instance segmentations can reach near-
 
 # Evaluation
 
-How success is measured. Describe only the metrics, targets, and evaluation procedure — do NOT describe the paper's method or how they achieved these results. Think of this as a general evaluation protocal for other scientists trying to solve the same problem, where they should not see this paper's solution.
-
 ## Metrics
 
-The primary metric is atlas accuracy: the fraction of target nuclei assigned the correct biological name after matching a target worm to an atlas. Accuracy is reported as mean and standard deviation over worms; higher mean and lower standard deviation are better.
+The primary metric is identity accuracy: the fraction of target nuclei assigned the correct biological name in held-out worms. Accuracy is reported as mean, minimum, and standard deviation over worms; higher mean/minimum and lower standard deviation are better.
 
-For unsupervised atlas construction, clique labels are induced only for evaluation by greedy maximum voting against ground-truth names. Pre-atlas accuracy measures the consistency output before atlas construction. The gap to a supervised oracle atlas is a constraint metric: lower is better because the claim is near-supervised accuracy without semantic labels for atlas construction.
+The evaluator also reports invalid assignment rate, the fraction of predicted assignments that are missing, malformed, or point outside the target worm. The gap to a supervised oracle on the same split is a constraint metric: lower is better because the target is high identity accuracy without using semantic labels to build the unsupervised reference.
 
 ## Baselines and Targets
 
@@ -71,7 +65,7 @@ Paper targets on the full 100-train/100-test manual-segmentation setting are: pr
 
 ## Evaluation Protocol
 
-The default workspace benchmark uses the public cellmatch release's tracked preprocessed Li et al. sample: training worms in `data/cellmatch_sample/train` and test worms in `data/cellmatch_sample/test`. Run `scripts/method.sh` to produce predictions, then `scripts/evaluate.sh` to score them. Evaluation code reads prediction artifacts only and does not import from `method/`.
+The default workspace benchmark uses the tracked preprocessed Li et al. sample: training worms in `data/cellmatch_sample/train` and test worms in `data/cellmatch_sample/test`. A submitted system should write a prediction artifact with one or more named methods under the documented JSON format, then `scripts/evaluate.sh <predictions.json>` scores that artifact. Evaluation code reads prediction artifacts only and does not import from any solution implementation.
 
 ---
 
@@ -266,6 +260,39 @@ The default workspace benchmark uses the public cellmatch release's tracked prep
 
 <details>
 <summary>Progress Log</summary>
+
+### [2026-06-02 22:08] - core_claim_plus
+- CPU job `fee0b427-5f9` completed the expanded audited Optuna/synchronization-loss probe on a 16-train/6-test/220-cell setting.
+- The unsupervised atlas reached 0.8424 +/- 0.1244 held-out atlas accuracy, beating the unlearned linear baseline at 0.7720 +/- 0.1599.
+- The same run stayed at/above the supervised oracle on this scaled split (`gap_to_supervised_oracle = -0.0030`) while using no semantic labels for training, restoring `core_claim_plus` under the audited implementation.
+
+### [2026-06-02 21:50] - core_claim
+- Continuing audit found that the previous implementation used staged random search for parameter learning, while the paper's method uses staged Bayesian optimization.
+- Replaced the learner with Optuna TPE Bayesian optimization for the paper's three stages and switched the default self-supervised objective to synchronization loss.
+- Local syntax checks and `python validate.py --compare` pass; a scheduled CPU job is needed before restoring `core_claim_plus` for the updated method.
+
+### [2026-06-02 21:58] - core_claim
+- CPU job `bd82a3e6-1a1` completed the updated Optuna/synchronization-loss default reproduction and `python validate.py --compare` passed.
+- Updated proposed unsupervised atlas reached 0.8729 +/- 0.0913 held-out atlas accuracy, beating the unlearned linear baseline at 0.7990 +/- 0.1381.
+- The unsupervised atlas used no semantic labels for training and stayed within 0.0021 of the supervised oracle on the scaled default setting.
+
+### [2026-06-02 21:49] - core_claim_plus
+- Default scaled reproduction completed in a scheduled CPU job and validates with `python validate.py --compare`.
+- Proposed unsupervised atlas reached 0.8656 +/- 0.0964 held-out atlas accuracy on the tracked public sample, beating the unlearned linear baseline at 0.7990 +/- 0.1381 while using no semantic labels for training.
+- Expanded 16-train/6-test/220-cell probe also completed and supported the same claim: unsupervised atlas 0.8598 +/- 0.0901 vs. unlearned linear baseline 0.7720 +/- 0.1599.
+
+</details>
+
+### Iteration 8: gpt-5.5 (verifier)
+- **Milestone**: `core_claim_plus` | **Status**: done
+- **Working time**: 7m | **GPU**: 0.0h
+
+<details>
+<summary>Progress Log</summary>
+
+### [2026-06-02 22:34] - core_claim_plus
+- Final verification passed with `python validate.py --compare`.
+- Method-agnostic documentation, formal score metrics, baseline separation, and generated-artifact cleanup were tightened without changing the reproduced milestone.
 
 ### [2026-06-02 22:08] - core_claim_plus
 - CPU job `fee0b427-5f9` completed the expanded audited Optuna/synchronization-loss probe on a 16-train/6-test/220-cell setting.
