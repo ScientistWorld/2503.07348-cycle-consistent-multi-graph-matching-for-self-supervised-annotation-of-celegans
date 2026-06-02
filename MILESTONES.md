@@ -1,8 +1,13 @@
 # Reproduction Milestones
 
-**Current: core_claim**
+**Current: core_claim_plus**
 
 ## Progress Log
+
+### [2026-06-02 21:47] - core_claim_plus
+- Job `05ec4579-229` validated an expanded 16-train/6-test/220-cell setting.
+- Expanded result: unsupervised atlas 0.8598 +/- 0.0901, unlearned baseline 0.7720 +/- 0.1599, supervised oracle 0.8447 +/- 0.1192, and no semantic labels used for training.
+- Restored `scripts/run.sh` to the default validated reproduction and comparison path.
 
 ### [2026-06-02 21:37] - core_claim
 - Job `2787fdde-fbc` validated the corrected default scaled reproduction.
@@ -18,4 +23,4 @@
 - Submitting a CPU test job to validate the updated scaled reproduction and comparison metrics inside the container.
 
 ## Stop Justification
-- Completed at milestone `core_claim`.
+- Completed at milestone `core_claim_plus`.
