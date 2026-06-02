@@ -23,6 +23,6 @@ bash scripts/method.sh \
   --train-worms 12 \
   --learn-worms 6 \
   --test-worms 6 \
-  --cells 160 \
+  --cells 0 \
   --trials 6 \
   --seed 7

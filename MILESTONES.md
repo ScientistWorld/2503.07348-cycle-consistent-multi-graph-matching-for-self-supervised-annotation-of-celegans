@@ -1,8 +1,13 @@
 # Reproduction Milestones
 
-**Current: core_claim_plus**
+**Current: method_runs**
 
 ## Progress Log
+
+### [2026-06-02 22:45] - method_runs
+- Removed semantic-label-dependent common-subset selection from the formal method and baseline paths.
+- Updated the default reproduction to use all 558 cells in each selected worm.
+- Scheduled a CPU job to regenerate predictions and scores before restoring `core_claim` or above for the stricter default.
 
 ### [2026-06-02 22:34] - core_claim_plus
 - Final verification passed with `python validate.py --compare`.

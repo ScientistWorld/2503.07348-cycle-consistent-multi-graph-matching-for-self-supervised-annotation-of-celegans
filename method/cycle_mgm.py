@@ -8,7 +8,7 @@ from pathlib import Path
 
 import numpy as np
 
-from data.cellmatch_data import Worm, common_labels, load_split, restrict_to_common
+from data.cellmatch_data import Worm, limit_cells_by_input_order, load_split
 
 
 try:
@@ -332,7 +332,10 @@ def build_atlas(cliques: list[dict[int, int]], worms: list[Worm], labels: list[s
 
 
 def supervised_atlas(worms: list[Worm]) -> Worm:
-    labels = worms[0].names
+    common = set(worms[0].names)
+    for worm in worms[1:]:
+        common &= set(worm.names)
+    labels = [label for label in worms[0].names if label in common]
     centroids = []
     radii = []
     for label in labels:
@@ -368,10 +371,12 @@ def run(args: argparse.Namespace) -> None:
     log("loading sample worms")
     train = load_split(args.train_dir, args.train_worms)
     test = load_split(args.test_dir, args.test_worms)
-    labels = common_labels(train + test, args.cells)
-    train = restrict_to_common(train, labels)
-    test = restrict_to_common(test, labels)
-    log(f"using {len(train)} train worms, {len(test)} test worms, {len(labels)} cells")
+    train = limit_cells_by_input_order(train, args.cells)
+    test = limit_cells_by_input_order(test, args.cells)
+    cell_count = min(len(w.names) for w in train + test)
+    if any(len(w.names) != cell_count for w in train + test):
+        raise ValueError("all worms must expose the same number of cells for this scaled matcher")
+    log(f"using {len(train)} train worms, {len(test)} test worms, {cell_count} cells")
 
     learn_subset = train[: args.learn_worms]
     learned = learn_params(learn_subset, args.trials, args.seed, args.loss, args.sparsity_limit)
@@ -398,7 +403,7 @@ def run(args: argparse.Namespace) -> None:
         "metadata": {
             "train_worms": len(train),
             "test_worms": len(test),
-            "cells": len(labels),
+            "cells": cell_count,
             "semantic_labels_used_for_training": False,
             "optimizer": "optuna_tpe" if optuna is not None else "seeded_random_fallback",
             "loss": args.loss,
@@ -439,7 +444,7 @@ def main() -> None:
     parser.add_argument("--train-worms", type=int, default=12)
     parser.add_argument("--learn-worms", type=int, default=6)
     parser.add_argument("--test-worms", type=int, default=6)
-    parser.add_argument("--cells", type=int, default=160)
+    parser.add_argument("--cells", type=int, default=0, help="0 means use all cells; positive values are label-free smoke subsets")
     parser.add_argument("--trials", type=int, default=6)
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--loss", choices=["sync", "cycle"], default="sync")

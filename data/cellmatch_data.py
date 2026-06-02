@@ -24,6 +24,16 @@ class Worm:
             self.radii[keep].copy(),
         )
 
+    def first_cells(self, count: int | None) -> "Worm":
+        if count is None or count <= 0 or count >= len(self.names):
+            return self
+        return Worm(
+            self.worm_id,
+            self.names[:count],
+            self.centroids[:count].copy(),
+            self.radii[:count].copy(),
+        )
+
 
 def load_worm(path: Path) -> Worm:
     names: list[str] = []
@@ -60,3 +70,8 @@ def common_labels(worms: list[Worm], max_cells: int | None = None) -> list[str]:
 
 def restrict_to_common(worms: list[Worm], labels: list[str]) -> list[Worm]:
     return [worm.subset(labels) for worm in worms]
+
+
+def limit_cells_by_input_order(worms: list[Worm], count: int | None) -> list[Worm]:
+    """Keep a small diagnostic subset without consulting semantic labels."""
+    return [worm.first_cells(count) for worm in worms]

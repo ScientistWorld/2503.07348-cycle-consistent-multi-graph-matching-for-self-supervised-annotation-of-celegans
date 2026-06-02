@@ -10,7 +10,7 @@ Semantic cell names in the training files may not be used to construct the unsup
 Report scores through `scripts/evaluate.sh` using prediction artifacts written by the submitted system. Do not edit `eval/` to import solution internals or recompute correspondences during scoring.
 
 ## Scale
-For comparable default scores, keep the `scripts/reproduce.sh` default subset sizes unless a separate experiment name is introduced. Increasing the number of cells, worms, or optimization trials is a scale change and must not be presented as a direct improvement on `scaled_manual_segmentation`.
+For comparable default scores, keep the `scripts/reproduce.sh` default subset sizes unless a separate experiment name is introduced. The formal default uses all 558 cells in each selected worm. Increasing the number of worms or optimization trials is a scale change and must not be presented as a direct improvement on `scaled_manual_segmentation`; reducing cells with `--cells > 0` is a smoke diagnostic, not the formal benchmark.
 
 ## Compliance Checklist
 - [ ] Used only `data/cellmatch_sample` for `scaled_manual_segmentation`

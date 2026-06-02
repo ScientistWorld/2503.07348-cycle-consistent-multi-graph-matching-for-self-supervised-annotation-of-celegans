@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 
-from data.cellmatch_data import Worm, common_labels, load_split, restrict_to_common
+from data.cellmatch_data import Worm, limit_cells_by_input_order, load_split
 
 
 def linear_cost(a: Worm, b: Worm) -> np.ndarray:
@@ -120,13 +120,12 @@ def main() -> None:
     parser.add_argument("--test-dir", default="data/cellmatch_sample/test")
     parser.add_argument("--train-worms", type=int, default=12)
     parser.add_argument("--test-worms", type=int, default=6)
-    parser.add_argument("--cells", type=int, default=160)
+    parser.add_argument("--cells", type=int, default=0, help="0 means use all cells; positive values are label-free smoke subsets")
     args = parser.parse_args()
     train = load_split(args.train_dir, args.train_worms)
     test = load_split(args.test_dir, args.test_worms)
-    labels = common_labels(train + test, args.cells)
-    train = restrict_to_common(train, labels)
-    test = restrict_to_common(test, labels)
+    train = limit_cells_by_input_order(train, args.cells)
+    test = limit_cells_by_input_order(test, args.cells)
     pairs = all_pairwise(train)
     cliques = synchronize_cliques(train, pairs)
     atlas = build_atlas(cliques, train, induce_labels(cliques, train))
@@ -134,7 +133,7 @@ def main() -> None:
         "metadata": {
             "train_worms": len(train),
             "test_worms": len(test),
-            "cells": len(labels),
+            "cells": min(len(w.names) for w in train + test),
             "semantic_labels_used_for_training": False,
             "baseline": "unlearned_linear",
         },
