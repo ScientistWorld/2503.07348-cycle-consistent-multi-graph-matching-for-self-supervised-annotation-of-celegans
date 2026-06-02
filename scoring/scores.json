@@ -7,17 +7,17 @@
           "atlas_accuracy_std": 0.1381337981109459
         },
         "our_unsupervised_atlas": {
-          "atlas_accuracy_mean": 0.8656250000000001,
-          "atlas_accuracy_std": 0.09640342209520714,
-          "pre_atlas_accuracy_mean": 0.9708333333333332,
-          "pre_atlas_accuracy_std": 0.04028974917877858,
-          "atlas_minus_preatlas": -0.10520833333333313,
-          "gap_to_supervised_oracle": -0.013541666666666785,
+          "atlas_accuracy_mean": 0.8729166666666667,
+          "atlas_accuracy_std": 0.09126331714087293,
+          "pre_atlas_accuracy_mean": 0.9760416666666667,
+          "pre_atlas_accuracy_std": 0.03597899174827198,
+          "atlas_minus_preatlas": -0.10312500000000002,
+          "gap_to_supervised_oracle": 0.002083333333333437,
           "semantic_labels_used_for_training": 0.0
         },
         "supervised_oracle_atlas": {
-          "atlas_accuracy_mean": 0.8520833333333333,
-          "atlas_accuracy_std": 0.1042499666933067
+          "atlas_accuracy_mean": 0.8750000000000001,
+          "atlas_accuracy_std": 0.09388878616036457
         }
       }
     }
