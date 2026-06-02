@@ -1,9 +1,5 @@
-# This iteration writes files only — do NOT submit compute jobs.
-# Once you set action to 'done', STOP immediately.
-# Do NOT sleep, poll, or wait. The system reads this file
-# only after your turn ends.
-action: done
+action: submit
 gpus: 0
 test: false
-milestone: core_claim_plus
-notes: "Final verification passed; fixed method-agnostic docs, formal score metrics, baseline separation, and tracked generated artifacts."
+milestone: method_runs
+notes: "Regenerate predictions and scores for the stricter label-free all-558-cell default after removing semantic-label-dependent subset selection."
