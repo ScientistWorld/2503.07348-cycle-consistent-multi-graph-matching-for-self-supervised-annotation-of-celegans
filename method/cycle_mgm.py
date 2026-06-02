@@ -185,25 +185,66 @@ def learn_params(worms: list[Worm], trials: int, seed: int) -> Params:
 
 def synchronize_cliques(worms: list[Worm], pairs: dict[str, list[int]]) -> list[dict[int, int]]:
     n = len(worms[0].names)
-    scores = []
-    for pivot in range(len(worms)):
-        kept = 0
-        for other in range(len(worms)):
-            if other != pivot:
-                kept += sum(x >= 0 for x in get_mapping(pairs, pivot, other, n))
-        scores.append(kept)
-    pivot = int(np.argmax(scores))
+    nodes = [(wid, nid) for wid in range(len(worms)) for nid in range(n)]
+    node_index = {node: idx for idx, node in enumerate(nodes)}
+    parent = list(range(len(nodes)))
+
+    def find(x: int) -> int:
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a: int, b: int) -> None:
+        ra, rb = find(a), find(b)
+        if ra != rb:
+            parent[rb] = ra
+
+    for i, j in combinations(range(len(worms)), 2):
+        mapping = pairs[f"{i}-{j}"]
+        for src, dst in enumerate(mapping):
+            if dst >= 0:
+                union(node_index[(i, src)], node_index[(j, dst)])
+
+    components: dict[int, list[tuple[int, int]]] = {}
+    for node in nodes:
+        components.setdefault(find(node_index[node]), []).append(node)
+
     cliques = []
-    for cell in range(n):
-        clique = {pivot: cell}
-        for other in range(len(worms)):
-            if other == pivot:
+    for comp in components.values():
+        by_worm: dict[int, list[int]] = {}
+        for wid, nid in comp:
+            by_worm.setdefault(wid, []).append(nid)
+        clique: dict[int, int] = {}
+        for wid, ids in by_worm.items():
+            if len(ids) == 1:
+                clique[wid] = ids[0]
                 continue
-            mapped = get_mapping(pairs, pivot, other, n)[cell]
-            if mapped >= 0:
-                clique[other] = mapped
-        cliques.append(clique)
-    return cliques
+            # Synchronization can merge conflicting paths. Keep the nucleus with
+            # the strongest support to other worms in this component.
+            best_id = max(ids, key=lambda nid: component_support(wid, nid, comp, pairs, n))
+            clique[wid] = best_id
+        if len(clique) > 1:
+            cliques.append(clique)
+
+    cliques.sort(key=lambda c: (-len(c), min(c), c[min(c)]))
+    return cliques[:n]
+
+
+def component_support(
+    wid: int,
+    nid: int,
+    component: list[tuple[int, int]],
+    pairs: dict[str, list[int]],
+    n: int,
+) -> int:
+    support = 0
+    for other_wid, other_nid in component:
+        if other_wid == wid:
+            continue
+        mapping = get_mapping(pairs, wid, other_wid, n)
+        support += int(mapping[nid] == other_nid)
+    return support
 
 
 def induce_clique_labels(cliques: list[dict[int, int]], worms: list[Worm]) -> list[str]:

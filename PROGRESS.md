@@ -5,6 +5,7 @@
 - Paper analysis is complete enough to define the core benchmark, metrics, baselines, and reported reference numbers.
 - The workspace now includes the public cellmatch preprocessed Li et al. sample data: 20 train worms and 6 test worms, each with 558 nuclei.
 - Implemented a scaled reproduction of the paper's computational procedure in `method/cycle_mgm.py`: Gaussian/Mahalanobis worm matching costs, staged parameter search, pairwise graph matching, synchronization into cycle-consistent cliques, atlas construction, and atlas-to-worm matching.
+- Updated clique synchronization to use connected components from all pairwise matchings, with conflict resolution by pairwise support, instead of projecting all cliques through one pivot worm.
 - Implemented method-agnostic evaluation in `eval/evaluate_outputs.py`; it reads prediction artifacts and does not import from `method/`.
 - `python validate.py --reference-only` passes.
 
@@ -26,6 +27,7 @@
 ## Issues
 
 - The login Python environment lacks NumPy/SciPy, so execution is deferred to the scheduled container setup and CPU job.
+- A local smoke run after the synchronization update could not execute because the login Python still lacks NumPy; the next scheduled CPU test job validates it inside the container.
 - Job `40f9b62b-e9b` was killed after roughly 16 minutes with no method output. I reduced the smoke run to 4 train worms, 2 test worms, 48 nuclei, and 1 trial per learning stage, added flushed progress logging, and removed duplicate baseline all-pairs matching.
 - Job `8a05affa-d37` completed in roughly 44 seconds, so the next submission scales up within the same one-CPU test-job envelope.
 - Job `f13ae259-26b` completed the medium scaled run successfully. The unsupervised atlas was near the supervised oracle but did not outperform the unlearned baseline on this particular subset.
