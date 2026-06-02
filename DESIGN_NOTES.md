@@ -17,3 +17,10 @@
 - The train/test slices are small because the tracked sample has 6 held-out worms, so each slice scores 3 worms. The added minimum-accuracy metric helps, but future data expansion would make the held-out gap more stable.
 - The split evaluators now require prediction artifacts to contain one labeling per fixed default test worm. Artifacts generated with smoke or expanded scale settings should fail this formal split by design.
 - `scoring/reference.json` now includes split metrics that are computed by `eval/train/` and `eval/test/`. If the unsplit `scripts/evaluate.sh` remains part of an automated comparison path, the runner should either refresh it to emit the same schema or keep train/test scores as the authoritative ResearchGym split outputs.
+
+## Real-Run Assessment
+- Job `44bcbdbf-08c` ran `scripts/evaluate_train.sh` and `scripts/evaluate_test.sh` on `outputs/method/predictions.json` with exit code 0.
+- The train slice scored target indices `[0, 1, 2]`; the held-out test slice scored `[3, 4, 5]`, so the outputs are not a copy-paste of the same worm subset.
+- Both score files cover the same experiment and method set: `unlearned_linear_baseline`, `our_unsupervised_atlas`, and `supervised_oracle_atlas`.
+- No score values are null. The proposed method has matching mean accuracy across the two three-worm slices by coincidence, but min accuracy, accuracy standard deviation, and oracle gap differ, and the baseline/oracle means also differ.
+- The main caveat is sample size: the formal split is only three worms per slice. The held-out scores are still usable as a shortcut check because worst-worm accuracy and variability expose slice-specific behavior that mean accuracy alone would hide.

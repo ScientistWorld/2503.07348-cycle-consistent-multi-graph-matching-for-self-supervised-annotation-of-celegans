@@ -2,8 +2,8 @@
 # Once you set action to 'done', STOP immediately.
 # Do NOT sleep, poll, or wait. The system reads this file
 # only after your turn ends.
-action: submit
+action: done
 gpus: 0
 test: false
 milestone: core_claim_plus
-notes: "Run evaluate_train.sh and evaluate_test.sh against outputs/method/predictions.json to populate split scores."
+notes: "Held-out worm split: 1 experiment, 18 train score values and 18 test score values across 3 methods; proposed mean accuracy is stable while min/std/oracle-gap differ by slice; caveat is only 3 worms per slice."
