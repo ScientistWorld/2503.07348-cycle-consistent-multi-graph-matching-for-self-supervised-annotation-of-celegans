@@ -15,5 +15,5 @@ cd /home/user
 
 export PYTHONUNBUFFERED=1
 
-bash scripts/scaled_core.sh
+bash scripts/reproduce.sh
 python validate.py --compare

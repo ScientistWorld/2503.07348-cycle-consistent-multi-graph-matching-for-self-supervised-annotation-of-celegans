@@ -1,6 +1,6 @@
 # Reproduction Milestones
 
-**Current: core_claim**
+**Current: core_claim_plus**
 
 <!-- Milestone levels (update "Current" above as you progress):
   none             — just started, no meaningful progress yet
@@ -28,6 +28,11 @@
 - CPU job `8a05affa-d37` completed the cycle-consistent multi-graph matching pipeline end-to-end on the tracked public sample.
 - Reproduced the central effect on a small real-data setting: unsupervised atlas accuracy 0.9583, supervised oracle atlas accuracy 0.9583, and unlearned linear baseline accuracy 0.9271.
 - The reproduced method used no semantic labels during training; labels were induced only for evaluation.
+
+### [2026-06-02 21:36] - core_claim_plus
+- CPU job `f13ae259-26b` completed the medium scaled setting with 8 training worms, 4 test worms, 96 cells, and 2 trials per learning stage.
+- The no-label unsupervised atlas reached 0.9609 +/- 0.0316, close to the supervised oracle at 0.9661 +/- 0.0356 and to the paper's reported unsupervised atlas accuracy of 0.961.
+- The result extends the core near-supervised annotation claim beyond the initial smoke subset.
 
 ## Stop Justification
 - Not stopped.

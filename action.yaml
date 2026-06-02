@@ -29,6 +29,6 @@
 
 action: submit
 gpus: 0
-test: true
-milestone: core_claim
-notes: "Run a medium scaled CPU setting for core_claim_plus: scripts/scaled_core.sh with 8 train worms, 4 test worms, 96 cells, and 2 trials per learning stage, then evaluate and validate scores."
+test: false
+milestone: core_claim_plus
+notes: "Run the default scaled reproduction on CPU: scripts/reproduce.sh with 12 train worms, 6 test worms, 160 cells, and 6 trials per learning stage, then evaluate and validate scores."
