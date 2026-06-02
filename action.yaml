@@ -5,4 +5,4 @@ action: submit
 gpus: 0
 test: true
 milestone: core_claim
-notes: "Validate the audited fix: run the default scaled reproduction with Optuna TPE staged Bayesian optimization and synchronization loss, then compare scores with validate.py."
+notes: "Run the expanded 16-train/6-test/220-cell Optuna TPE synchronization-loss probe to restore core_claim_plus under the audited implementation."
