@@ -1,9 +1,5 @@
 # Problem Definition
 
-What problem does this paper address? Write this so that someone with no knowledge of the paper can understand what needs to be solved and how success is measured.
-
-Do NOT describe the paper's method or solution here — only the problem itself. Think about if a future scientist agent try to solve this problem from scratch without knowing what approach the paper took. If you leak the solution, you compromise the benchmark.
-
 ## Research Question
 
 How can cell nuclei in 3D C. elegans microscopy images be assigned consistent biological identities across animals when manual semantic annotations are scarce or unavailable?
@@ -14,4 +10,4 @@ Cell-level identity maps let biologists compare gene expression and morphology a
 
 ## Success Criteria
 
-A successful system builds a reusable atlas from segmented nuclei, assigns atlas identities to target worms with high per-cell accuracy, remains close to a supervised atlas in accuracy, and does not use target-test labels during training or model selection.
+A successful system builds a reusable identity reference from segmented nuclei, assigns identities to held-out worms with high per-cell accuracy, remains close to an otherwise comparable supervised reference in accuracy, and does not use held-out labels during training or model selection.

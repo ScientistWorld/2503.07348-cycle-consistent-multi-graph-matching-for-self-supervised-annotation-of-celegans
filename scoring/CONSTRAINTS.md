@@ -7,7 +7,7 @@ Use only the tracked preprocessed sample in `data/cellmatch_sample` for the defa
 Semantic cell names in the training files may not be used to construct the unsupervised atlas, tune matching parameters, choose correspondences, or select checkpoints. They may be used only by `eval/` to score artifacts and by the supervised oracle baseline reported separately.
 
 ## Evaluation
-Report scores through `scripts/evaluate.sh` using prediction artifacts written by the method. Do not edit `eval/` to import method internals or recompute correspondences during scoring.
+Report scores through `scripts/evaluate.sh` using prediction artifacts written by the submitted system. Do not edit `eval/` to import solution internals or recompute correspondences during scoring.
 
 ## Scale
 For comparable default scores, keep the `scripts/reproduce.sh` default subset sizes unless a separate experiment name is introduced. Increasing the number of cells, worms, or optimization trials is a scale change and must not be presented as a direct improvement on `scaled_manual_segmentation`.

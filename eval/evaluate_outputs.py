@@ -2,32 +2,66 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from pathlib import Path
 
-import numpy as np
+
+def worm_accuracy(atlas_labels: list[str], labels: list[str], labeling: list) -> float:
+    correct = 0
+    total = 0
+    for atlas_idx, target_idx in enumerate(labeling):
+        total += 1
+        if target_idx is None or not isinstance(target_idx, int):
+            continue
+        if target_idx < 0 or target_idx >= len(labels):
+            continue
+        if atlas_idx < len(atlas_labels) and atlas_labels[atlas_idx] == labels[target_idx]:
+            correct += 1
+    return correct / total if total else 0.0
+
+
+def invalid_assignment_rate(labels: list[str], labeling: list) -> float:
+    total = len(labeling)
+    if total == 0:
+        return 1.0
+    invalid = 0
+    for target_idx in labeling:
+        if target_idx is None or not isinstance(target_idx, int) or target_idx < 0 or target_idx >= len(labels):
+            invalid += 1
+    return invalid / total
+
+
+def mean(values: list[float]) -> float:
+    return sum(values) / len(values) if values else 0.0
+
+
+def std(values: list[float]) -> float:
+    if not values:
+        return 0.0
+    avg = mean(values)
+    return math.sqrt(sum((value - avg) ** 2 for value in values) / len(values))
 
 
 def score_method(method: dict, test_labels: list[list[str]]) -> dict[str, float]:
     atlas_labels = method["atlas_labels"]
-    acc = []
-    for labels, labeling in zip(test_labels, method["test_labelings"]):
-        correct = 0
-        total = 0
-        for atlas_idx, target_idx in enumerate(labeling):
-            if target_idx is None or target_idx < 0:
-                total += 1
-                continue
-            total += 1
-            correct += int(atlas_labels[atlas_idx] == labels[target_idx])
-        acc.append(correct / total if total else 0.0)
+    acc = [
+        worm_accuracy(atlas_labels, labels, labeling)
+        for labels, labeling in zip(test_labels, method["test_labelings"])
+    ]
+    invalid_rates = [
+        invalid_assignment_rate(labels, labeling)
+        for labels, labeling in zip(test_labels, method["test_labelings"])
+    ]
     result = {
-        "atlas_accuracy_mean": float(np.mean(acc)),
-        "atlas_accuracy_std": float(np.std(acc)),
+        "atlas_accuracy_mean": float(mean(acc)),
+        "atlas_accuracy_min": float(min(acc) if acc else 0.0),
+        "atlas_accuracy_std": float(std(acc)),
+        "invalid_assignment_rate": float(mean(invalid_rates)),
     }
     if "pre_atlas_accuracies" in method:
         vals = method["pre_atlas_accuracies"]
-        result["pre_atlas_accuracy_mean"] = float(np.mean(vals))
-        result["pre_atlas_accuracy_std"] = float(np.std(vals))
+        result["pre_atlas_accuracy_mean"] = float(mean(vals))
+        result["pre_atlas_accuracy_std"] = float(std(vals))
         result["atlas_minus_preatlas"] = result["atlas_accuracy_mean"] - result["pre_atlas_accuracy_mean"]
     return result
 

@@ -4,6 +4,10 @@
 
 ## Progress Log
 
+### [2026-06-02 22:34] - core_claim_plus
+- Final verification passed with `python validate.py --compare`.
+- Method-agnostic documentation, formal score metrics, baseline separation, and generated-artifact cleanup were tightened without changing the reproduced milestone.
+
 ### [2026-06-02 22:08] - core_claim_plus
 - CPU job `fee0b427-5f9` completed the expanded audited Optuna/synchronization-loss probe on a 16-train/6-test/220-cell setting.
 - The unsupervised atlas reached 0.8424 +/- 0.1244 held-out atlas accuracy, beating the unlearned linear baseline at 0.7720 +/- 0.1599.

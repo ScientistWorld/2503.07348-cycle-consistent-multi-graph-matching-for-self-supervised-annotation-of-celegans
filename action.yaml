@@ -6,4 +6,4 @@ action: done
 gpus: 0
 test: false
 milestone: core_claim_plus
-notes: "Audited fresh-clone packaging; tracked data is used by default and data/downloads keeps only a tracked .gitkeep while fetched contents remain ignored."
+notes: "Final verification passed; fixed method-agnostic docs, formal score metrics, baseline separation, and tracked generated artifacts."
