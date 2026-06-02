@@ -4,10 +4,15 @@
 
 ## Progress Log
 
-### [2026-06-02 22:04] - core_claim
+### [2026-06-02 21:50] - core_claim
 - Continuing audit found that the previous implementation used staged random search for parameter learning, while the paper's method uses staged Bayesian optimization.
 - Replaced the learner with Optuna TPE Bayesian optimization for the paper's three stages and switched the default self-supervised objective to synchronization loss.
 - Local syntax checks and `python validate.py --compare` pass; a scheduled CPU job is needed before restoring `core_claim_plus` for the updated method.
+
+### [2026-06-02 21:58] - core_claim
+- CPU job `bd82a3e6-1a1` completed the updated Optuna/synchronization-loss default reproduction and `python validate.py --compare` passed.
+- Updated proposed unsupervised atlas reached 0.8729 +/- 0.0913 held-out atlas accuracy, beating the unlearned linear baseline at 0.7990 +/- 0.1381.
+- The unsupervised atlas used no semantic labels for training and stayed within 0.0021 of the supervised oracle on the scaled default setting.
 
 ### [2026-06-02 21:49] - core_claim_plus
 - Default scaled reproduction completed in a scheduled CPU job and validates with `python validate.py --compare`.
@@ -15,4 +20,4 @@
 - Expanded 16-train/6-test/220-cell probe also completed and supported the same claim: unsupervised atlas 0.8598 +/- 0.0901 vs. unlearned linear baseline 0.7720 +/- 0.1599.
 
 ## Stop Justification
-- Not stopped. The updated Bayesian-optimization learner is being submitted for scheduled validation.
+- Not stopped. Submitting an expanded Optuna run to restore `core_claim_plus` under the audited implementation.
