@@ -5,4 +5,4 @@ action: submit
 gpus: 0
 test: true
 milestone: core_claim
-notes: "Validate best-agreement cycle synchronization by rerunning the scaled reproduction and compare scores inside the container."
+notes: "Run expanded 16-train/220-cell scaled reproduction probe; results go to outputs/expanded without overwriting validated scoring/scores.json."
