@@ -1,8 +1,8 @@
 # IMPORTANT: Once you set action to 'submit' or 'done', STOP immediately.
 # Do NOT sleep, poll, or wait for jobs. The system reads this file
 # only after your turn ends. Sleeping blocks the entire pipeline.
-action: submit
+action: done
 gpus: 0
 test: true
-milestone: core_claim
-notes: "Run expanded 16-train/220-cell scaled reproduction probe; results go to outputs/expanded without overwriting validated scoring/scores.json."
+milestone: core_claim_plus
+notes: "Default and expanded scaled settings reproduce the core no-label atlas claim; validated default scores remain in scoring/scores.json."
