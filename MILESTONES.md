@@ -34,5 +34,10 @@
 - The no-label unsupervised atlas reached 0.9609 +/- 0.0316, close to the supervised oracle at 0.9661 +/- 0.0356 and to the paper's reported unsupervised atlas accuracy of 0.961.
 - The result extends the core near-supervised annotation claim beyond the initial smoke subset.
 
+### [2026-06-02 21:45] - core_claim_plus
+- CPU job `b50c2dd4-592` completed the default scaled reproduction with 12 training worms, 6 test worms, 160 cells, and 6 trials per learning stage.
+- The unsupervised atlas stayed close to the supervised oracle on the same split: 0.8312 versus 0.8521, with no semantic labels used for training.
+- The run does not justify a higher milestone because atlas construction reduced pre-atlas accuracy on this harder setting and the simplified solver remains below the paper's full-scale accuracy.
+
 ## Stop Justification
-- Not stopped.
+- Stopped at `core_claim_plus`: the environment is packaged, validated, and has reproduced the main no-label near-supervised atlas claim on multiple real-data scaled settings. Higher milestones would require reproducing the paper's specialized solver stack and broader reported ablations, which are beyond the current simplified solver implementation.

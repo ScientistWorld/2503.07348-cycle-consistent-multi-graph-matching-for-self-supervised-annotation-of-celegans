@@ -15,12 +15,13 @@
 - The unsupervised method also achieved pre-atlas accuracy 0.9531 +/- 0.0518, atlas-minus-pre-atlas improvement 0.0052, zero gap to the supervised oracle, and `semantic_labels_used_for_training = 0.0`.
 - CPU job `f13ae259-26b` completed the medium scaled setting and updated `scoring/scores.json`: unlearned linear baseline atlas accuracy 0.9609 +/- 0.0316; unsupervised atlas accuracy 0.9609 +/- 0.0316; supervised oracle atlas accuracy 0.9661 +/- 0.0356.
 - On the medium setting, the unsupervised method used no semantic labels during training, achieved pre-atlas accuracy 0.9505 +/- 0.0648, improved to atlas accuracy by 0.0104, and stayed within 0.0052 of the supervised oracle.
+- CPU job `b50c2dd4-592` completed the default scaled reproduction in `scripts/reproduce.sh` and updated `scoring/scores.json`: unlearned linear baseline atlas accuracy 0.8281 +/- 0.1442; unsupervised atlas accuracy 0.8312 +/- 0.1340; supervised oracle atlas accuracy 0.8521 +/- 0.1042.
+- On the default scaled setting, the unsupervised method remained near the supervised oracle with a 0.0208 gap and used no semantic labels during training, but atlas accuracy was lower than pre-atlas correspondence accuracy by 0.0844.
 - Paper reference for the main full-scale setting: unsupervised atlas 0.961 +/- 0.020, supervised atlas 0.964 +/- 0.019.
 
 ## Remaining
 
-- Run the default scaled reproduction in `scripts/reproduce.sh`: 12 train worms, 6 test worms, 160 nuclei, and 6 trials per learning stage.
-- If the larger setting regresses toward the baseline or times out, diagnose parameter search, synchronization, and atlas matching before claiming any higher milestone.
+- Higher milestones would require either implementing the paper's specialized Fusion Moves/MGM solvers or running a larger version of the original public code path. The current environment is usable for future agents at `core_claim_plus`, but does not support `secondary_claims` or `majority`.
 
 ## Issues
 
@@ -28,6 +29,7 @@
 - Job `40f9b62b-e9b` was killed after roughly 16 minutes with no method output. I reduced the smoke run to 4 train worms, 2 test worms, 48 nuclei, and 1 trial per learning stage, added flushed progress logging, and removed duplicate baseline all-pairs matching.
 - Job `8a05affa-d37` completed in roughly 44 seconds, so the next submission scales up within the same one-CPU test-job envelope.
 - Job `f13ae259-26b` completed the medium scaled run successfully. The unsupervised atlas was near the supervised oracle but did not outperform the unlearned baseline on this particular subset.
+- Job `b50c2dd4-592` completed the default scaled run successfully. The supervised oracle also dropped substantially on the 160-cell setting, indicating atlas-to-held-out matching is the limiting component in this simplified solver rather than only unsupervised atlas construction.
 - The full paper run is CPU-heavy and reported as dozens of hours; this workspace starts with a smaller tracked public sample and reduced optimization trials.
 
 ## Deviations from Paper

@@ -27,8 +27,6 @@
 #   milestone: core_claim
 #   notes: "Reproduced the core claim. Environment packaged."
 
-action: submit
-gpus: 0
-test: false
+action: done
 milestone: core_claim_plus
-notes: "Run the default scaled reproduction on CPU: scripts/reproduce.sh with 12 train worms, 6 test worms, 160 cells, and 6 trials per learning stage, then evaluate and validate scores."
+notes: "Reached core_claim_plus with validated scaled reproductions. Default scripts/reproduce.sh completed and scoring/scores.json records the final 12-train/6-test/160-cell run; higher milestones need the paper's specialized solver stack."
