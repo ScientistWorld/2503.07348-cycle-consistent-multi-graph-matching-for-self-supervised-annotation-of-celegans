@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import random
 from dataclasses import asdict, dataclass
 from itertools import combinations
@@ -32,6 +31,10 @@ class Params:
     w_off: float = 1.0
     neighbor_count: int = 5
     quadratic_iters: int = 2
+
+
+def log(message: str) -> None:
+    print(f"[cycle-mgm] {message}", flush=True)
 
 
 def mahalanobis(a: np.ndarray, b: np.ndarray, cov_diag: tuple[float, float, float]) -> np.ndarray:
@@ -165,8 +168,9 @@ def learn_params(worms: list[Worm], trials: int, seed: int) -> Params:
     rng = random.Random(seed)
     params = Params()
     for stage in (1, 2, 3):
+        log(f"learning stage {stage}/3 with {len(worms)} worms and {max(1, trials)} trials")
         best = None
-        for _ in range(max(1, trials)):
+        for trial in range(max(1, trials)):
             cand = random_params(params, stage, rng)
             pairs = all_pairwise(worms, cand, sparse=stage >= 2, quadratic=stage == 3)
             loss = cycle_loss(worms, pairs)
@@ -174,6 +178,7 @@ def learn_params(worms: list[Worm], trials: int, seed: int) -> Params:
             objective = loss + (1e-4 * sparsity if stage == 2 else 0.0)
             if best is None or objective < best[0]:
                 best = (objective, cand)
+            log(f"stage {stage} trial {trial + 1}: objective={objective:.3f}")
         params = best[1]
     return params
 
@@ -266,27 +271,35 @@ def match_atlas(atlas: Worm, targets: list[Worm], params: Params, quadratic: boo
 
 
 def run(args: argparse.Namespace) -> None:
+    log("loading sample worms")
     train = load_split(args.train_dir, args.train_worms)
     test = load_split(args.test_dir, args.test_worms)
     labels = common_labels(train + test, args.cells)
     train = restrict_to_common(train, labels)
     test = restrict_to_common(test, labels)
+    log(f"using {len(train)} train worms, {len(test)} test worms, {len(labels)} cells")
 
     learn_subset = train[: args.learn_worms]
     learned = learn_params(learn_subset, args.trials, args.seed)
+    log("matching all training worms with learned cycle-consistent parameters")
     pairs = all_pairwise(train, learned, sparse=True, quadratic=True)
+    log("synchronizing pairwise matches into atlas cliques")
     cliques = synchronize_cliques(train, pairs)
     clique_labels = induce_clique_labels(cliques, train)
     atlas = build_atlas(cliques, train, clique_labels)
     sup_atlas = supervised_atlas(train)
 
     unlearned = Params(cen_cov=(1, 1, 1), rad_cov=(1, 1, 1), off_cov=(1, 1, 1), tau_cen=1e9, tau_rad=1e9)
+    log("building unlearned linear baseline atlas")
+    baseline_pairs = all_pairwise(train, unlearned, sparse=False, quadratic=False)
+    baseline_cliques = synchronize_cliques(train, baseline_pairs)
     baseline_atlas = build_atlas(
-        synchronize_cliques(train, all_pairwise(train, unlearned, sparse=False, quadratic=False)),
+        baseline_cliques,
         train,
-        induce_clique_labels(synchronize_cliques(train, all_pairwise(train, unlearned, sparse=False, quadratic=False)), train),
+        induce_clique_labels(baseline_cliques, train),
     )
 
+    log("matching atlases to held-out test worms")
     output = {
         "metadata": {
             "train_worms": len(train),
@@ -319,6 +332,7 @@ def run(args: argparse.Namespace) -> None:
     }
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     Path(args.output).write_text(json.dumps(output, indent=2))
+    log(f"wrote predictions to {args.output}")
 
 
 def main() -> None:

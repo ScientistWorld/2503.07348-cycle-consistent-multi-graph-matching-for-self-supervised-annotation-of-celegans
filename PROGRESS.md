@@ -10,7 +10,8 @@
 
 ## Results
 
-- No reproduced scores yet. The next submitted CPU job will run `scripts/reproduce.sh` and write `scoring/scores.json`.
+- No reproduced scores yet. CPU job `40f9b62b-e9b` was killed before any user-level method output, so it did not produce `scoring/scores.json`.
+- The next submitted CPU job runs the much smaller `scripts/smoke.sh` diagnostic and writes `scoring/scores.json` if the method/evaluator pipeline completes.
 - Paper reference for the main full-scale setting: unsupervised atlas 0.961 +/- 0.020, supervised atlas 0.964 +/- 0.019.
 
 ## Remaining
@@ -22,6 +23,7 @@
 ## Issues
 
 - The login Python environment lacks NumPy/SciPy, so execution is deferred to the scheduled container setup and CPU job.
+- Job `40f9b62b-e9b` was killed after roughly 16 minutes with no method output. I reduced the smoke run to 4 train worms, 2 test worms, 48 nuclei, and 1 trial per learning stage, added flushed progress logging, and removed duplicate baseline all-pairs matching.
 - The full paper run is CPU-heavy and reported as dozens of hours; this workspace starts with a smaller tracked public sample and reduced optimization trials.
 
 ## Deviations from Paper

@@ -20,5 +20,9 @@
 - Added a scaled implementation using Gaussian unary/quadratic matching costs, parameter search, synchronization into cliques, unsupervised atlas construction, and atlas-to-worm evaluation on the public preprocessed cellmatch sample.
 - Prepared a CPU smoke job to run the method end-to-end; milestone remains `none` until the job result confirms execution.
 
+### [2026-06-02 21:27] - none
+- CPU job `40f9b62b-e9b` exited `-9` before producing method output or scores.
+- Added flushed progress logging, removed duplicate baseline all-pairs matching, and switched `scripts/run.sh` to a smaller diagnostic smoke run.
+
 ## Stop Justification
 - Not stopped.

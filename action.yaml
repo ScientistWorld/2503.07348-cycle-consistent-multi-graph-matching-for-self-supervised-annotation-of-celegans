@@ -31,4 +31,4 @@ action: submit
 gpus: 0
 test: true
 milestone: none
-notes: "CPU smoke job: install NumPy/SciPy in the container, run the scaled cycle-consistent multi-graph matching reproduction on the tracked sample, evaluate, and validate scores."
+notes: "Retry as a smaller CPU diagnostic: run scripts/smoke.sh with 4 train worms, 2 test worms, 48 cells, and flushed progress logging, then evaluate and validate scores."

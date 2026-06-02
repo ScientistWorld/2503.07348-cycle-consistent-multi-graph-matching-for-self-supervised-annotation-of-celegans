@@ -13,5 +13,7 @@ set -e
 
 cd /home/user
 
-bash scripts/reproduce.sh
+export PYTHONUNBUFFERED=1
+
+bash scripts/smoke.sh
 python validate.py --compare
