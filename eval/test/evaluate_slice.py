@@ -9,7 +9,7 @@ from typing import Any
 
 import numpy as np
 
-from data.cellmatch_data import common_labels, load_split, restrict_to_common
+from data.cellmatch_data import limit_cells_by_input_order, load_split
 
 
 SLICE = "test"
@@ -18,7 +18,7 @@ DEFAULT_TRAIN_DIR = "data/cellmatch_sample/train"
 DEFAULT_TEST_DIR = "data/cellmatch_sample/test"
 DEFAULT_TRAIN_WORMS = 12
 DEFAULT_TEST_WORMS = 6
-DEFAULT_CELLS = 160
+DEFAULT_CELLS = 558
 
 
 def split_indices(count: int) -> list[int]:
@@ -112,8 +112,8 @@ def load_ground_truth_labels(metadata: dict[str, Any]) -> list[list[str]]:
             )
     train = load_split(DEFAULT_TRAIN_DIR, DEFAULT_TRAIN_WORMS)
     test = load_split(DEFAULT_TEST_DIR, DEFAULT_TEST_WORMS)
-    labels = common_labels(train + test, DEFAULT_CELLS)
-    return [worm.names for worm in restrict_to_common(test, labels)]
+    test = limit_cells_by_input_order(test, DEFAULT_CELLS)
+    return [worm.names for worm in test]
 
 
 def validate_ground_truth(exp_name: str, exp: dict[str, Any], truth: list[list[str]]) -> None:

@@ -34,4 +34,4 @@
 - Expanded 16-train/6-test/220-cell probe also completed and supported the same claim: unsupervised atlas 0.8598 +/- 0.0901 vs. unlearned linear baseline 0.7720 +/- 0.1599.
 
 ## Stop Justification
-- Completed at milestone `core_claim_plus`.
+- Not stopped. A CPU verification job is pending for the all-558-cell default.

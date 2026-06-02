@@ -8,7 +8,7 @@ The evaluator also reports invalid assignment rate, the fraction of predicted as
 
 ## Baselines and Targets
 
-Paper targets on the full 100-train/100-test manual-segmentation setting are: prior supervised atlas 0.93 +/- 0.11, the paper's supervised atlas 0.964 +/- 0.019, and the paper's unsupervised atlas 0.961 +/- 0.020. Training-set ablations report linear dense atlas accuracy 0.955 +/- 0.031 and full-pipeline atlas accuracy 0.972 +/- 0.015.
+Paper targets on the full 100-train/100-test manual-segmentation setting are: prior supervised reference 0.93 +/- 0.11, the paper's supervised reference 0.964 +/- 0.019, and the paper's label-free reference 0.961 +/- 0.020. Training-set diagnostic results in the paper range from roughly 0.955 to 0.972 atlas accuracy, depending on the system variant.
 
 ## Evaluation Protocol
 
