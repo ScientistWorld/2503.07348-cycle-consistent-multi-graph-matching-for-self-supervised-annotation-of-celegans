@@ -3,21 +3,21 @@
     "scaled_manual_segmentation": {
       "results": {
         "unlearned_linear_baseline": {
-          "atlas_accuracy_mean": 0.9270833333333333,
-          "atlas_accuracy_std": 0.010416666666666685
+          "atlas_accuracy_mean": 0.9609375,
+          "atlas_accuracy_std": 0.03157384284630767
         },
         "our_unsupervised_atlas": {
-          "atlas_accuracy_mean": 0.9583333333333334,
-          "atlas_accuracy_std": 0.0,
-          "pre_atlas_accuracy_mean": 0.953125,
-          "pre_atlas_accuracy_std": 0.05182226234930312,
-          "atlas_minus_preatlas": 0.00520833333333337,
-          "gap_to_supervised_oracle": 0.0,
+          "atlas_accuracy_mean": 0.9609375,
+          "atlas_accuracy_std": 0.03157384284630767,
+          "pre_atlas_accuracy_mean": 0.9505208333333333,
+          "pre_atlas_accuracy_std": 0.06479091304492048,
+          "atlas_minus_preatlas": 0.01041666666666674,
+          "gap_to_supervised_oracle": 0.005208333333333259,
           "semantic_labels_used_for_training": 0.0
         },
         "supervised_oracle_atlas": {
-          "atlas_accuracy_mean": 0.9583333333333334,
-          "atlas_accuracy_std": 0.0
+          "atlas_accuracy_mean": 0.9661458333333333,
+          "atlas_accuracy_std": 0.035611443570774344
         }
       }
     }
