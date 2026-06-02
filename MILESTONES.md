@@ -25,4 +25,4 @@
 - Expanded 16-train/6-test/220-cell probe also completed and supported the same claim: unsupervised atlas 0.8598 +/- 0.0901 vs. unlearned linear baseline 0.7720 +/- 0.1599.
 
 ## Stop Justification
-- Stopped at `core_claim_plus`: the audited Optuna/synchronization-loss implementation has passed both the default scaled reproduction and an expanded setting. Higher milestones would require additional secondary claims or the paper's heavier specialized solvers beyond the current budget/practical scope.
+- Completed at milestone `core_claim_plus`.
