@@ -1,8 +1,13 @@
 # Reproduction Milestones
 
-**Current: method_runs**
+**Current: core_claim**
 
 ## Progress Log
+
+### [2026-06-02 23:19] - core_claim
+- CPU job `18a6816a-348` completed the stricter all-558-cell default reproduction and `python validate.py --compare` passed.
+- The unsupervised atlas reached 0.7386 +/- 0.1259 held-out atlas accuracy, beating the unlearned linear baseline at 0.6941 +/- 0.1150 while using no semantic labels for training.
+- The method stayed near the supervised oracle on the same all-cell held-out worms (`gap_to_supervised_oracle = 0.0600`) with zero invalid assignments, restoring `core_claim` for the label-free benchmark.
 
 ### [2026-06-02 22:45] - method_runs
 - Removed semantic-label-dependent common-subset selection from the formal method and baseline paths.
@@ -34,4 +39,4 @@
 - Expanded 16-train/6-test/220-cell probe also completed and supported the same claim: unsupervised atlas 0.8598 +/- 0.0901 vs. unlearned linear baseline 0.7720 +/- 0.1599.
 
 ## Stop Justification
-- Not stopped. A CPU verification job is pending for the all-558-cell default.
+- Final verification is complete at `core_claim`. The previous `core_claim_plus` expanded run used a pre-correction reduced setting, so the verified milestone is intentionally lowered until an additional post-correction all-cell or label-free setting is run.

@@ -9,7 +9,7 @@
 - Continuing audit on 2026-06-02 found and fixed a method-faithfulness gap: staged random search was replaced with Optuna TPE Bayesian optimization, matching the paper's three-stage parameter-learning procedure more closely. The learner now defaults to the synchronization loss used by the paper's main method.
 - Updated clique synchronization to select the pivot-induced cycle-consistent multi-matching with maximum agreement to all solved pairwise matchings, a scaled approximation of the paper's synchronization objective.
 - Implemented method-agnostic evaluation in `eval/evaluate_outputs.py`; it reads prediction artifacts and does not import from `method/`.
-- `python validate.py --reference-only` passes.
+- CPU job `18a6816a-348` completed the corrected all-558-cell default reproduction, including train/test slice scoring and `python validate.py --compare`.
 
 ## Results
 
@@ -29,11 +29,12 @@
 - CPU job `b50c2dd4-592` completed the default scaled reproduction in `scripts/reproduce.sh` and updated `scoring/scores.json`: unlearned linear baseline atlas accuracy 0.8281 +/- 0.1442; unsupervised atlas accuracy 0.8312 +/- 0.1340; supervised oracle atlas accuracy 0.8521 +/- 0.1042.
 - On the default scaled setting, the unsupervised method remained near the supervised oracle with a 0.0208 gap and used no semantic labels during training, but atlas accuracy was lower than pre-atlas correspondence accuracy by 0.0844.
 - Paper reference for the main full-scale setting: unsupervised atlas 0.961 +/- 0.020, supervised atlas 0.964 +/- 0.019.
+- CPU job `18a6816a-348` completed the stricter all-558-cell default reproduction after removing label-dependent subset construction. `scoring/scores.json` now reports: unlearned linear baseline atlas accuracy 0.6941 +/- 0.1150; unsupervised atlas accuracy 0.7386 +/- 0.1259; supervised oracle atlas accuracy 0.7987 +/- 0.1301. The unsupervised method used no semantic labels during training, had zero invalid assignments, and stayed within 0.0600 of the supervised oracle.
+- The hidden split scores also discriminate on the corrected all-cell setting: train slice unsupervised 0.7736 vs. baseline 0.7300, and test slice unsupervised 0.7037 vs. baseline 0.6583.
 
 ## Remaining
 
-- A new CPU job is scheduled to regenerate `scoring/scores.json` for the stricter all-558-cell default after removing label-dependent subset construction.
-- Higher milestones would require broader secondary claims, such as implementing the paper's specialized Fusion Moves/MGM solvers, reproducing the synchronization-loss ablation, or running a larger version of the original public code path.
+- Higher milestones require additional post-correction settings, such as a second all-cell split, a label-free cell-count stress test that does not choose cells by semantic names, the paper's synchronization-loss ablation, specialized Fusion Moves/MGM solvers, or a larger version of the original public code path.
 
 ## Issues
 
@@ -44,6 +45,7 @@
 - Job `f13ae259-26b` completed the medium scaled run successfully. The unsupervised atlas was near the supervised oracle but did not outperform the unlearned baseline on this particular subset.
 - Job `b50c2dd4-592` completed the default scaled run successfully. The supervised oracle also dropped substantially on the 160-cell setting, indicating atlas-to-held-out matching is the limiting component in this simplified solver rather than only unsupervised atlas construction.
 - The full paper run is CPU-heavy and reported as dozens of hours; this workspace starts with a smaller tracked public sample and reduced optimization trials.
+- The earlier `core_claim_plus` expanded score was based on a pre-correction reduced setting. It remains documented for audit history, but it is not counted as the verified final milestone.
 
 ## Deviations from Paper
 

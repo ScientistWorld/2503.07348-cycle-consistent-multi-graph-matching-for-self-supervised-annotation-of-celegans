@@ -1,5 +1,5 @@
-action: submit
+action: done
 gpus: 0
 test: false
-milestone: method_runs
-notes: "Regenerate predictions and scores for the stricter label-free all-558-cell default after removing semantic-label-dependent subset selection."
+milestone: core_claim
+notes: "All-558-cell label-free reproduction validated; unsupervised atlas beats the unlearned baseline and the gym is ready at core_claim."
