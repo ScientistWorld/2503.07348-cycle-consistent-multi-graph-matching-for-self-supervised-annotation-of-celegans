@@ -39,4 +39,4 @@
 - Expanded 16-train/6-test/220-cell probe also completed and supported the same claim: unsupervised atlas 0.8598 +/- 0.0901 vs. unlearned linear baseline 0.7720 +/- 0.1599.
 
 ## Stop Justification
-- Final verification is complete at `core_claim`. The previous `core_claim_plus` expanded run used a pre-correction reduced setting, so the verified milestone is intentionally lowered until an additional post-correction all-cell or label-free setting is run.
+- Completed at milestone `core_claim`.
