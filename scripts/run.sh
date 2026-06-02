@@ -15,5 +15,5 @@ cd /home/user
 
 export PYTHONUNBUFFERED=1
 
-bash scripts/reproduce.sh
-python validate.py --compare
+bash scripts/evaluate_train.sh outputs/method/predictions.json
+bash scripts/evaluate_test.sh outputs/method/predictions.json
