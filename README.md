@@ -1,3 +1,22 @@
+# Overview
+
+- **Paper ID:** 2503.07348
+- **Title:** Cycle-Consistent Multi-Graph Matching for Self-Supervised Annotation of C. Elegans
+- **Domain:** Biomedical computer vision / graph matching
+- **TL;DR:** The paper builds a C. elegans cell atlas without semantic labels by learning Gaussian graph-matching costs from cycle consistency across segmented worms.
+
+## Short Summary
+
+The task is to assign consistent biological names to hundreds of nuclei in 3D worm microscopy images. The paper models worms as graphs of nuclei and learns the parameters of a Gaussian graph-matching objective without semantic labels, using cycle consistency across multiple worms as the self-supervised signal. The resulting cliques form an unsupervised statistical atlas that can be matched to new worms. On the full benchmark, the unsupervised atlas is reported within 0.003 accuracy of the paper's supervised atlas.
+
+## Key Results
+
+- Main manual-segmentation result: unsupervised atlas 0.961 +/- 0.020 vs supervised atlas 0.964 +/- 0.019.
+- Pipeline ablation: full pipeline atlas accuracy 0.972 +/- 0.015 on training-set ablations vs 0.955 +/- 0.031 for linear dense.
+- Robustness result with automatic StarDist segmentations: full unsupervised pipeline 0.809 +/- 0.147 atlas accuracy.
+
+---
+
 # Problem Definition
 
 What problem does this paper address? Write this so that someone with no knowledge of the paper can understand what needs to be solved and how success is measured.
@@ -6,21 +25,98 @@ Do NOT describe the paper's method or solution here — only the problem itself.
 
 ## Research Question
 
-<!-- What problem or challenge does this paper tackle? What gap in existing work does it address? -->
+How can cell nuclei in 3D C. elegans microscopy images be assigned consistent biological identities across animals when manual semantic annotations are scarce or unavailable?
 
 ## Why It Matters
 
-<!-- Why is this problem important? What would a good solution enable? Make it short -->
+Cell-level identity maps let biologists compare gene expression and morphology across individual worms in a common reference frame. Manual annotation is slow and expert-dependent, so a good automatic solution removes a major bottleneck for high-throughput organism-scale studies.
 
 ## Success Criteria
 
-<!-- What would a successful solution look like? What properties should it have? This is about the goal, not the paper's specific approach. Make it short -->
+A successful system builds a reusable atlas from segmented nuclei, assigns atlas identities to target worms with high per-cell accuracy, remains close to a supervised atlas in accuracy, and does not use target-test labels during training or model selection.
+
+---
+
+# Paper's Method
+
+How the paper approaches the problem, i.e. the paper's core contributions.
+
+## Key Contribution
+
+The paper introduces a fully unsupervised atlas-learning pipeline for C. elegans nuclei based on cycle-consistent multi-graph matching. It replaces manually annotated semantic cell labels with cycle-consistent cliques across worms, then builds a statistical atlas from those cliques.
+
+## Approach
+
+Each worm is represented as a graph of segmented nuclei with 3D centroid and radii features. Pairwise worm-to-worm graph matching uses Gaussian/Mahalanobis unary costs for centroid and radii similarity plus quadratic costs for pairwise centroid offsets. The method learns diagonal Gaussian covariance and sparsity parameters through three-stage Bayesian optimization using a self-supervised cycle/synchronization loss over a subset of worms. After solving pairwise matches, a synchronization step produces cycle-consistent cliques. Clique labels are used only for evaluation; the atlas itself is built from the unlabeled clique geometry and then matched to target worms.
+
+## Main Claims
+
+Primary: an unsupervised atlas built from instance segmentations can reach near-supervised C. elegans cell-annotation accuracy. Secondary: the learned Gaussian parameters, quadratic offset costs, synchronization loss, and explicit atlas construction improve over simpler linear or unlearned variants.
+
+---
+
+# Evaluation
+
+How success is measured. Describe only the metrics, targets, and evaluation procedure — do NOT describe the paper's method or how they achieved these results. Think of this as a general evaluation protocal for other scientists trying to solve the same problem, where they should not see this paper's solution.
+
+## Metrics
+
+The primary metric is atlas accuracy: the fraction of target nuclei assigned the correct biological name after matching a target worm to an atlas. Accuracy is reported as mean and standard deviation over worms; higher mean and lower standard deviation are better.
+
+For unsupervised atlas construction, clique labels are induced only for evaluation by greedy maximum voting against ground-truth names. Pre-atlas accuracy measures the consistency output before atlas construction. The gap to a supervised oracle atlas is a constraint metric: lower is better because the claim is near-supervised accuracy without semantic labels for atlas construction.
+
+## Baselines and Targets
+
+Paper targets on the full 100-train/100-test manual-segmentation setting are: prior supervised atlas 0.93 +/- 0.11, the paper's supervised atlas 0.964 +/- 0.019, and the paper's unsupervised atlas 0.961 +/- 0.020. Training-set ablations report linear dense atlas accuracy 0.955 +/- 0.031 and full-pipeline atlas accuracy 0.972 +/- 0.015.
+
+## Evaluation Protocol
+
+The default workspace benchmark uses the public cellmatch release's tracked preprocessed Li et al. sample: training worms in `data/cellmatch_sample/train` and test worms in `data/cellmatch_sample/test`. Run `scripts/method.sh` to produce predictions, then `scripts/evaluate.sh` to score them. Evaluation code reads prediction artifacts only and does not import from `method/`.
+
+---
+
+# Reproduction Log
+
+### Iteration 1: gpt-5.5
+- **Milestone**: `core_claim_plus` | **Status**: done
+- **Working time**: 14m | **GPU**: 0.0h
+- **Jobs**: 4 total (3 completed, 1 failed)
+
+<details>
+<summary>Progress Log</summary>
+
+### [2026-06-02 20:51] - none
+- Read the paper and identified the core claim: unsupervised cycle-consistent multi-graph matching builds a C. elegans atlas with near-supervised annotation accuracy.
+- Added a scaled implementation using Gaussian unary/quadratic matching costs, parameter search, synchronization into cliques, unsupervised atlas construction, and atlas-to-worm evaluation on the public preprocessed cellmatch sample.
+- Prepared a CPU smoke job to run the method end-to-end; milestone remains `none` until the job result confirms execution.
+
+### [2026-06-02 21:27] - none
+- CPU job `40f9b62b-e9b` exited `-9` before producing method output or scores.
+- Added flushed progress logging, removed duplicate baseline all-pairs matching, and switched `scripts/run.sh` to a smaller diagnostic smoke run.
+
+### [2026-06-02 21:31] - core_claim
+- CPU job `8a05affa-d37` completed the cycle-consistent multi-graph matching pipeline end-to-end on the tracked public sample.
+- Reproduced the central effect on a small real-data setting: unsupervised atlas accuracy 0.9583, supervised oracle atlas accuracy 0.9583, and unlearned linear baseline accuracy 0.9271.
+- The reproduced method used no semantic labels during training; labels were induced only for evaluation.
+
+### [2026-06-02 21:36] - core_claim_plus
+- CPU job `f13ae259-26b` completed the medium scaled setting with 8 training worms, 4 test worms, 96 cells, and 2 trials per learning stage.
+- The no-label unsupervised atlas reached 0.9609 +/- 0.0316, close to the supervised oracle at 0.9661 +/- 0.0356 and to the paper's reported unsupervised atlas accuracy of 0.961.
+- The result extends the core near-supervised annotation claim beyond the initial smoke subset.
+
+### [2026-06-02 21:45] - core_claim_plus
+- CPU job `b50c2dd4-592` completed the default scaled reproduction with 12 training worms, 6 test worms, 160 cells, and 6 trials per learning stage.
+- The unsupervised atlas stayed close to the supervised oracle on the same split: 0.8312 versus 0.8521, with no semantic labels used for training.
+- The run does not justify a higher milestone because atlas construction reduced pre-atlas accuracy on this harder setting and the simplified solver remains below the paper's full-scale accuracy.
+
+</details>
+
 
 ---
 
 # Reproduction Milestones
 
-**Current: none**
+**Current: core_claim_plus**
 
 ## Stop Justification
-- Completed at milestone `none`.
+- Completed at milestone `core_claim_plus`.

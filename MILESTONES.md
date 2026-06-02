@@ -40,4 +40,4 @@
 - The run does not justify a higher milestone because atlas construction reduced pre-atlas accuracy on this harder setting and the simplified solver remains below the paper's full-scale accuracy.
 
 ## Stop Justification
-- Stopped at `core_claim_plus`: the environment is packaged, validated, and has reproduced the main no-label near-supervised atlas claim on multiple real-data scaled settings. Higher milestones would require reproducing the paper's specialized solver stack and broader reported ablations, which are beyond the current simplified solver implementation.
+- Completed at milestone `core_claim_plus`.
