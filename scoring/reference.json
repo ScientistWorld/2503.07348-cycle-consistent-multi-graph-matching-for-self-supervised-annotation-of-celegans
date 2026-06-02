@@ -5,13 +5,51 @@
       "weight": 1.0,
       "primary_metric": "atlas_accuracy_mean",
       "metrics": {
-        "atlas_accuracy_mean": {"higher_is_better": true, "coefficient": 1.0},
-        "atlas_accuracy_std": {"higher_is_better": false, "coefficient": -0.1},
-        "pre_atlas_accuracy_mean": {"higher_is_better": true, "coefficient": 0.0},
-        "pre_atlas_accuracy_std": {"higher_is_better": false, "coefficient": 0.0},
-        "atlas_minus_preatlas": {"higher_is_better": true, "coefficient": 0.0},
-        "gap_to_supervised_oracle": {"higher_is_better": false, "coefficient": -0.5},
-        "semantic_labels_used_for_training": {"higher_is_better": false, "coefficient": -1.0}
+        "atlas_accuracy_mean": {
+          "higher_is_better": true,
+          "coefficient": 1.0,
+          "description": "Mean biological cell-identity accuracy on held-out worms."
+        },
+        "atlas_accuracy_min": {
+          "higher_is_better": true,
+          "coefficient": 0.25,
+          "description": "Worst held-out worm accuracy, included to catch methods tuned to only a subset of worms."
+        },
+        "atlas_accuracy_std": {
+          "higher_is_better": false,
+          "coefficient": -0.1,
+          "description": "Across-worm accuracy variability, penalizing brittle performance."
+        },
+        "invalid_assignment_rate": {
+          "higher_is_better": false,
+          "coefficient": -0.2,
+          "description": "Fraction of atlas cells assigned to missing, malformed, or out-of-range target indices."
+        },
+        "pre_atlas_accuracy_mean": {
+          "higher_is_better": true,
+          "coefficient": 0.0,
+          "description": "Diagnostic training-worm clique-label accuracy before atlas-to-test matching."
+        },
+        "pre_atlas_accuracy_std": {
+          "higher_is_better": false,
+          "coefficient": 0.0,
+          "description": "Diagnostic variability of pre-atlas training-worm clique-label accuracy."
+        },
+        "atlas_minus_preatlas": {
+          "higher_is_better": true,
+          "coefficient": 0.0,
+          "description": "Diagnostic difference between held-out atlas accuracy and pre-atlas training accuracy."
+        },
+        "gap_to_supervised_oracle": {
+          "higher_is_better": false,
+          "coefficient": -0.5,
+          "description": "Accuracy gap to the supervised atlas oracle on the same held-out slice."
+        },
+        "semantic_labels_used_for_training": {
+          "higher_is_better": false,
+          "coefficient": -1.0,
+          "description": "Indicator that semantic labels were used to construct or tune the unsupervised atlas."
+        }
       },
       "results": {
         "unlearned_linear_baseline": {

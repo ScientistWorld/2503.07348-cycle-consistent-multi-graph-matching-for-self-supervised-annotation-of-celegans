@@ -9,9 +9,16 @@ from typing import Any
 
 import numpy as np
 
+from data.cellmatch_data import common_labels, load_split, restrict_to_common
+
 
 SLICE = "test"
 SPLIT_SEED = 250307348
+DEFAULT_TRAIN_DIR = "data/cellmatch_sample/train"
+DEFAULT_TEST_DIR = "data/cellmatch_sample/test"
+DEFAULT_TRAIN_WORMS = 12
+DEFAULT_TEST_WORMS = 6
+DEFAULT_CELLS = 160
 
 
 def split_indices(count: int) -> list[int]:
@@ -39,6 +46,17 @@ def worm_accuracy(atlas_labels: list[str], labels: list[str], labeling: list[Any
     return correct / total if total else 0.0
 
 
+def invalid_assignment_rate(labels: list[str], labeling: list[Any]) -> float:
+    total = len(labeling)
+    if total == 0:
+        return 1.0
+    invalid = 0
+    for target_idx in labeling:
+        if target_idx is None or not isinstance(target_idx, int) or target_idx < 0 or target_idx >= len(labels):
+            invalid += 1
+    return invalid / total
+
+
 def score_method(method: dict[str, Any], test_labels: list[list[str]], indices: list[int]) -> dict[str, float]:
     atlas_labels = method["atlas_labels"]
     labelings = method["test_labelings"]
@@ -46,9 +64,15 @@ def score_method(method: dict[str, Any], test_labels: list[list[str]], indices: 
         worm_accuracy(atlas_labels, test_labels[idx], labelings[idx])
         for idx in indices
     ]
+    invalid_rates = [
+        invalid_assignment_rate(test_labels[idx], labelings[idx])
+        for idx in indices
+    ]
     result = {
         "atlas_accuracy_mean": float(np.mean(accuracies)),
+        "atlas_accuracy_min": float(np.min(accuracies)),
         "atlas_accuracy_std": float(np.std(accuracies)),
+        "invalid_assignment_rate": float(np.mean(invalid_rates)),
     }
     if "pre_atlas_accuracies" in method:
         vals = method["pre_atlas_accuracies"]
@@ -58,24 +82,46 @@ def score_method(method: dict[str, Any], test_labels: list[list[str]], indices: 
     return result
 
 
-def validate_experiment(exp_name: str, exp: dict[str, Any]) -> None:
-    test_labels = exp.get("test_labels")
+def validate_experiment(exp_name: str, exp: dict[str, Any], expected_labelings: int) -> None:
     methods = exp.get("methods")
-    if not isinstance(test_labels, list) or not test_labels:
-        raise ValueError(f"{exp_name}: predictions must contain a non-empty test_labels list")
     if not isinstance(methods, dict) or not methods:
         raise ValueError(f"{exp_name}: predictions must contain at least one method")
     for method_name, method in methods.items():
         labelings = method.get("test_labelings")
         if not isinstance(labelings, list):
             raise ValueError(f"{exp_name}.{method_name}: missing test_labelings list")
-        if len(labelings) != len(test_labels):
+        if len(labelings) != expected_labelings:
             raise ValueError(
                 f"{exp_name}.{method_name}: {len(labelings)} test_labelings for "
-                f"{len(test_labels)} label sets"
+                f"{expected_labelings} evaluator-loaded label sets"
             )
         if "atlas_labels" not in method:
             raise ValueError(f"{exp_name}.{method_name}: missing atlas_labels")
+
+
+def load_ground_truth_labels(metadata: dict[str, Any]) -> list[list[str]]:
+    expected = {
+        "train_worms": DEFAULT_TRAIN_WORMS,
+        "test_worms": DEFAULT_TEST_WORMS,
+        "cells": DEFAULT_CELLS,
+    }
+    for key, value in expected.items():
+        if key in metadata and int(metadata[key]) != value:
+            raise ValueError(
+                f"metadata {key}={metadata[key]} does not match fixed evaluation value {value}"
+            )
+    train = load_split(DEFAULT_TRAIN_DIR, DEFAULT_TRAIN_WORMS)
+    test = load_split(DEFAULT_TEST_DIR, DEFAULT_TEST_WORMS)
+    labels = common_labels(train + test, DEFAULT_CELLS)
+    return [worm.names for worm in restrict_to_common(test, labels)]
+
+
+def validate_ground_truth(exp_name: str, exp: dict[str, Any], truth: list[list[str]]) -> None:
+    artifact_labels = exp.get("test_labels")
+    if artifact_labels is not None and artifact_labels != truth:
+        raise ValueError(
+            f"{exp_name}: artifact test_labels do not match evaluator-loaded ground truth"
+        )
 
 
 def expected_methods_from_scores(path: Path) -> dict[str, list[str]]:
@@ -139,6 +185,7 @@ def main() -> None:
     predictions_path = Path(args.predictions)
     pred = json.loads(predictions_path.read_text())
     metadata = pred.get("metadata", {})
+    ground_truth_labels = load_ground_truth_labels(metadata)
     expected = (
         expected_methods_from_scores(Path(args.match_methods_from))
         if args.match_methods_from
@@ -155,10 +202,11 @@ def main() -> None:
     }
 
     for exp_name, exp in pred["experiments"].items():
-        validate_experiment(exp_name, exp)
-        indices = split_indices(len(exp["test_labels"]))
+        validate_ground_truth(exp_name, exp, ground_truth_labels)
+        validate_experiment(exp_name, exp, len(ground_truth_labels))
+        indices = split_indices(len(ground_truth_labels))
         scored = {
-            name: score_method(method, exp["test_labels"], indices)
+            name: score_method(method, ground_truth_labels, indices)
             for name, method in exp["methods"].items()
         }
         methods = restrict_to_expected(scored, exp_name, expected)
