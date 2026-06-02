@@ -5,6 +5,7 @@
 - Paper analysis is complete enough to define the core benchmark, metrics, baselines, and reported reference numbers.
 - The workspace now includes the public cellmatch preprocessed Li et al. sample data: 20 train worms and 6 test worms, each with 558 nuclei.
 - Implemented a scaled reproduction of the paper's computational procedure in `method/cycle_mgm.py`: Gaussian/Mahalanobis worm matching costs, staged parameter search, pairwise graph matching, synchronization into cycle-consistent cliques, atlas construction, and atlas-to-worm matching.
+- Continuing audit on 2026-06-02 found and fixed a method-faithfulness gap: staged random search was replaced with Optuna TPE Bayesian optimization, matching the paper's three-stage parameter-learning procedure more closely. The learner now defaults to the synchronization loss used by the paper's main method.
 - Updated clique synchronization to select the pivot-induced cycle-consistent multi-matching with maximum agreement to all solved pairwise matchings, a scaled approximation of the paper's synchronization objective.
 - Implemented method-agnostic evaluation in `eval/evaluate_outputs.py`; it reads prediction artifacts and does not import from `method/`.
 - `python validate.py --reference-only` passes.
@@ -15,6 +16,8 @@
 - CPU job `2787fdde-fbc` completed the corrected default reproduction in 180 seconds and wrote `scoring/scores.json`. The unsupervised atlas reached 0.8656 +/- 0.0964 atlas accuracy, beating the unlearned linear baseline at 0.7990 +/- 0.1381 and staying at/above the supervised oracle on this scaled split (gap_to_supervised_oracle = -0.0135) while using no semantic labels for training.
 - Added `scripts/expanded_core.sh` to probe a larger 16-train/6-test/220-cell setting without overwriting the validated default `scoring/scores.json`.
 - CPU job `05ec4579-229` completed the expanded probe in 486 seconds and wrote `outputs/expanded/scores.json`. The unsupervised atlas reached 0.8598 +/- 0.0901, beating the unlearned linear baseline at 0.7720 +/- 0.1599 and staying at/above the supervised oracle at 0.8447 +/- 0.1192, again with no semantic labels used for training.
+- Final validation on 2026-06-02 passed with `python validate.py --compare`. The validator confirmed that `eval/` and `data/` do not import from `method/`, evaluation reads method output artifacts, and committed code has no `shared/` path dependency.
+- `scripts/method.sh` now evaluates the actual path supplied via `--output`, so custom method runs can be scored without accidentally reading the default artifact.
 - CPU job `8a05affa-d37` completed the smoke reproduction and wrote `scoring/scores.json`.
 - Reproduced smoke scores on the tracked public sample: unlearned linear baseline atlas accuracy 0.9271 +/- 0.0104; unsupervised atlas accuracy 0.9583 +/- 0.0000; supervised oracle atlas accuracy 0.9583 +/- 0.0000.
 - The unsupervised method also achieved pre-atlas accuracy 0.9531 +/- 0.0518, atlas-minus-pre-atlas improvement 0.0052, zero gap to the supervised oracle, and `semantic_labels_used_for_training = 0.0`.
@@ -26,7 +29,8 @@
 
 ## Remaining
 
-- The default and expanded scaled benchmarks support `core_claim_plus`. Higher milestones would require broader secondary claims, such as implementing the paper's specialized Fusion Moves/MGM solvers, reproducing the synchronization-loss ablation, or running a larger version of the original public code path.
+- The default and expanded scaled benchmarks previously supported `core_claim_plus`. The updated Optuna/synchronization-loss learner is pending a scheduled CPU validation job before that milestone should be restored.
+- Higher milestones would require broader secondary claims, such as implementing the paper's specialized Fusion Moves/MGM solvers, reproducing the synchronization-loss ablation, or running a larger version of the original public code path.
 
 ## Issues
 
@@ -40,5 +44,5 @@
 
 ## Deviations from Paper
 
-- Scale: the paper uses 100 training worms, 100 test worms, 558 nuclei, and extensive Bayesian optimization. The default workspace run uses the public code release's 20/6 preprocessed sample with subset defaults of 12 train worms, 6 test worms, 160 nuclei, and 6 random-search trials per learning stage. This preserves the procedure while making the first job practical.
+- Scale: the paper uses 100 training worms, 100 test worms, 558 nuclei, and extensive Bayesian optimization. The default workspace run uses the public code release's 20/6 preprocessed sample with subset defaults of 12 train worms, 6 test worms, 160 nuclei, and 6 Optuna TPE trials per learning stage. This preserves the procedure while making the first job practical.
 - Solver: the paper uses specialized Fusion Moves and MGM solvers. This implementation uses SciPy linear assignment with iterative quadratic-cost linearization and best-agreement pivot synchronization. It keeps the same cost terms, clique construction, and atlas evaluation structure, but is a simpler solver implementation for the scaled benchmark.

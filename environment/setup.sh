@@ -16,4 +16,4 @@
 
 set -e
 
-uv pip install --system numpy scipy
+uv pip install --system numpy scipy optuna

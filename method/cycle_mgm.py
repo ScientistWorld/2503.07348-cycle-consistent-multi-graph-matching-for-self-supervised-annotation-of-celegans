@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import random
 from dataclasses import asdict, dataclass
 from itertools import combinations
 from pathlib import Path
@@ -16,6 +15,11 @@ try:
     from scipy.optimize import linear_sum_assignment
 except Exception:  # pragma: no cover - used only when scipy is unavailable.
     linear_sum_assignment = None
+
+try:
+    import optuna
+except Exception:  # pragma: no cover - setup.sh installs optuna for jobs.
+    optuna = None
 
 
 @dataclass
@@ -149,37 +153,113 @@ def avg_allowed_assignments(worms: list[Worm], params: Params) -> float:
     return float(np.mean(vals))
 
 
-def random_params(base: Params, stage: int, rng: random.Random) -> Params:
+def trial_params(base: Params, stage: int, trial: "optuna.Trial") -> Params:
     p = Params(**asdict(base))
     if stage == 1:
-        p.cen_cov = tuple(rng.uniform(10, 220) for _ in range(3))
-        p.rad_cov = tuple(rng.uniform(10, 220) for _ in range(3))
+        p.cen_cov = tuple(trial.suggest_float(f"cen_cov_{axis}", 10.0, 220.0) for axis in range(3))
+        p.rad_cov = tuple(trial.suggest_float(f"rad_cov_{axis}", 10.0, 220.0) for axis in range(3))
     elif stage == 2:
-        p.k_min = rng.randint(4, 20)
-        p.tau_cen = 10 ** rng.uniform(-1.0, 1.2)
-        p.tau_rad = 10 ** rng.uniform(-1.3, 1.0)
+        p.k_min = trial.suggest_int("k_min", 4, 20)
+        p.tau_cen = trial.suggest_float("tau_cen", 0.1, 16.0, log=True)
+        p.tau_rad = trial.suggest_float("tau_rad", 0.05, 10.0, log=True)
     elif stage == 3:
-        p.off_cov = tuple(rng.uniform(5, 220) for _ in range(3))
-        p.w_off = rng.uniform(0.25, 2.0)
+        p.off_cov = tuple(trial.suggest_float(f"off_cov_{axis}", 5.0, 220.0) for axis in range(3))
     return p
 
 
-def learn_params(worms: list[Worm], trials: int, seed: int) -> Params:
-    rng = random.Random(seed)
+def synchronization_loss(worms: list[Worm], pairs: dict[str, list[int]]) -> int:
+    n = len(worms[0].names)
+    cliques = synchronize_cliques(worms, pairs)
+    max_edges = len(cliques) * len(worms) * (len(worms) - 1) // 2
+    return max_edges - synchronization_agreement(cliques, pairs, n)
+
+
+def matching_loss(worms: list[Worm], pairs: dict[str, list[int]], loss: str) -> int:
+    if loss == "cycle":
+        return cycle_loss(worms, pairs)
+    return synchronization_loss(worms, pairs)
+
+
+def fallback_trial_params(base: Params, stage: int, rng: np.random.Generator) -> Params:
+    p = Params(**asdict(base))
+    if stage == 1:
+        p.cen_cov = tuple(float(x) for x in rng.uniform(10.0, 220.0, size=3))
+        p.rad_cov = tuple(float(x) for x in rng.uniform(10.0, 220.0, size=3))
+    elif stage == 2:
+        p.k_min = int(rng.integers(4, 21))
+        p.tau_cen = float(10 ** rng.uniform(np.log10(0.1), np.log10(16.0)))
+        p.tau_rad = float(10 ** rng.uniform(np.log10(0.05), np.log10(10.0)))
+    elif stage == 3:
+        p.off_cov = tuple(float(x) for x in rng.uniform(5.0, 220.0, size=3))
+    return p
+
+
+def fallback_learn_params(worms: list[Worm], trials: int, seed: int, loss: str) -> Params:
+    rng = np.random.default_rng(seed)
     params = Params()
     for stage in (1, 2, 3):
-        log(f"learning stage {stage}/3 with {len(worms)} worms and {max(1, trials)} trials")
+        log(f"Optuna unavailable; falling back to seeded random stage {stage}/3")
         best = None
         for trial in range(max(1, trials)):
-            cand = random_params(params, stage, rng)
+            cand = fallback_trial_params(params, stage, rng)
             pairs = all_pairwise(worms, cand, sparse=stage >= 2, quadratic=stage == 3)
-            loss = cycle_loss(worms, pairs)
+            objective_loss = matching_loss(worms, pairs, loss)
             sparsity = avg_allowed_assignments(worms, cand) if stage == 2 else 0.0
-            objective = loss + (1e-4 * sparsity if stage == 2 else 0.0)
+            objective = objective_loss + (1e-4 * sparsity if stage == 2 else 0.0)
             if best is None or objective < best[0]:
                 best = (objective, cand)
             log(f"stage {stage} trial {trial + 1}: objective={objective:.3f}")
         params = best[1]
+    return params
+
+
+def learn_params(worms: list[Worm], trials: int, seed: int, loss: str, sparsity_limit: float) -> Params:
+    if optuna is None:
+        return fallback_learn_params(worms, trials, seed, loss)
+
+    optuna.logging.set_verbosity(optuna.logging.WARNING)
+    params = Params()
+    for stage in (1, 2, 3):
+        log(f"Bayesian optimization stage {stage}/3 with {len(worms)} worms and {max(1, trials)} trials")
+        sampler = optuna.samplers.TPESampler(seed=seed + stage)
+        if stage == 2:
+            study = optuna.create_study(directions=["minimize", "minimize"], sampler=sampler)
+
+            def objective(trial: "optuna.Trial") -> tuple[float, float]:
+                cand = trial_params(params, stage, trial)
+                pairs = all_pairwise(worms, cand, sparse=True, quadratic=False)
+                objective_loss = float(matching_loss(worms, pairs, loss))
+                sparsity = avg_allowed_assignments(worms, cand)
+                trial.set_user_attr("params", asdict(cand))
+                log(
+                    f"stage {stage} trial {trial.number + 1}: "
+                    f"loss={objective_loss:.3f}, allowed={sparsity:.1f}"
+                )
+                return objective_loss, sparsity
+
+            study.optimize(objective, n_trials=max(1, trials), show_progress_bar=False)
+            candidates = study.best_trials or study.trials
+            feasible = [t for t in candidates if t.values and t.values[1] < sparsity_limit]
+            if not feasible:
+                feasible = [t for t in candidates if t.values]
+            min_loss = min(float(t.values[0]) for t in feasible)
+            near_best = [t for t in feasible if float(t.values[0]) <= min_loss * 1.0005]
+            chosen = min(near_best, key=lambda t: float(t.values[1]))
+        else:
+            study = optuna.create_study(direction="minimize", sampler=sampler)
+
+            def objective(trial: "optuna.Trial") -> float:
+                cand = trial_params(params, stage, trial)
+                pairs = all_pairwise(worms, cand, sparse=stage >= 2, quadratic=stage == 3)
+                objective_loss = float(matching_loss(worms, pairs, loss))
+                trial.set_user_attr("params", asdict(cand))
+                log(f"stage {stage} trial {trial.number + 1}: loss={objective_loss:.3f}")
+                return objective_loss
+
+            study.optimize(objective, n_trials=max(1, trials), show_progress_bar=False)
+            chosen = study.best_trial
+        params = Params(**chosen.user_attrs["params"])
+        log(f"selected stage {stage} parameters: {asdict(params)}")
     return params
 
 
@@ -294,7 +374,7 @@ def run(args: argparse.Namespace) -> None:
     log(f"using {len(train)} train worms, {len(test)} test worms, {len(labels)} cells")
 
     learn_subset = train[: args.learn_worms]
-    learned = learn_params(learn_subset, args.trials, args.seed)
+    learned = learn_params(learn_subset, args.trials, args.seed, args.loss, args.sparsity_limit)
     log("matching all training worms with learned cycle-consistent parameters")
     pairs = all_pairwise(train, learned, sparse=True, quadratic=True)
     log("synchronizing pairwise matches into atlas cliques")
@@ -320,6 +400,8 @@ def run(args: argparse.Namespace) -> None:
             "test_worms": len(test),
             "cells": len(labels),
             "semantic_labels_used_for_training": False,
+            "optimizer": "optuna_tpe" if optuna is not None else "seeded_random_fallback",
+            "loss": args.loss,
             "params": asdict(learned),
         },
         "experiments": {
@@ -360,6 +442,8 @@ def main() -> None:
     parser.add_argument("--cells", type=int, default=160)
     parser.add_argument("--trials", type=int, default=6)
     parser.add_argument("--seed", type=int, default=7)
+    parser.add_argument("--loss", choices=["sync", "cycle"], default="sync")
+    parser.add_argument("--sparsity-limit", type=float, default=12000.0)
     run(parser.parse_args())
 
 
