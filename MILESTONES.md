@@ -1,8 +1,13 @@
 # Reproduction Milestones
 
-**Current: core_claim**
+**Current: core_claim_plus**
 
 ## Progress Log
+
+### [2026-06-02 22:08] - core_claim_plus
+- CPU job `fee0b427-5f9` completed the expanded audited Optuna/synchronization-loss probe on a 16-train/6-test/220-cell setting.
+- The unsupervised atlas reached 0.8424 +/- 0.1244 held-out atlas accuracy, beating the unlearned linear baseline at 0.7720 +/- 0.1599.
+- The same run stayed at/above the supervised oracle on this scaled split (`gap_to_supervised_oracle = -0.0030`) while using no semantic labels for training, restoring `core_claim_plus` under the audited implementation.
 
 ### [2026-06-02 21:50] - core_claim
 - Continuing audit found that the previous implementation used staged random search for parameter learning, while the paper's method uses staged Bayesian optimization.
@@ -20,4 +25,4 @@
 - Expanded 16-train/6-test/220-cell probe also completed and supported the same claim: unsupervised atlas 0.8598 +/- 0.0901 vs. unlearned linear baseline 0.7720 +/- 0.1599.
 
 ## Stop Justification
-- Not stopped. Submitting an expanded Optuna run to restore `core_claim_plus` under the audited implementation.
+- Stopped at `core_claim_plus`: the audited Optuna/synchronization-loss implementation has passed both the default scaled reproduction and an expanded setting. Higher milestones would require additional secondary claims or the paper's heavier specialized solvers beyond the current budget/practical scope.

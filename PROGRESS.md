@@ -19,6 +19,7 @@
 - Final validation on 2026-06-02 passed with `python validate.py --compare`. The validator confirmed that `eval/` and `data/` do not import from `method/`, evaluation reads method output artifacts, and committed code has no `shared/` path dependency.
 - `scripts/method.sh` now evaluates the actual path supplied via `--output`, so custom method runs can be scored without accidentally reading the default artifact.
 - CPU job `bd82a3e6-1a1` completed the audited Optuna/synchronization-loss default reproduction in 240 seconds and passed `python validate.py --compare`. The unsupervised atlas reached 0.8729 +/- 0.0913, beating the unlearned linear baseline at 0.7990 +/- 0.1381 while using no semantic labels for training; the gap to the supervised oracle was 0.0021.
+- CPU job `fee0b427-5f9` completed the expanded audited Optuna/synchronization-loss probe in 481 seconds on a 16-train/6-test/220-cell setting. The unsupervised atlas reached 0.8424 +/- 0.1244, beating the unlearned linear baseline at 0.7720 +/- 0.1599 and staying at/above the supervised oracle at 0.8394 +/- 0.1504 (`gap_to_supervised_oracle = -0.0030`) while using no semantic labels for training.
 - CPU job `8a05affa-d37` completed the smoke reproduction and wrote `scoring/scores.json`.
 - Reproduced smoke scores on the tracked public sample: unlearned linear baseline atlas accuracy 0.9271 +/- 0.0104; unsupervised atlas accuracy 0.9583 +/- 0.0000; supervised oracle atlas accuracy 0.9583 +/- 0.0000.
 - The unsupervised method also achieved pre-atlas accuracy 0.9531 +/- 0.0518, atlas-minus-pre-atlas improvement 0.0052, zero gap to the supervised oracle, and `semantic_labels_used_for_training = 0.0`.
@@ -30,7 +31,7 @@
 
 ## Remaining
 
-- The updated Optuna/synchronization-loss learner supports `core_claim` on the default scaled benchmark. An expanded 16-train/6-test/220-cell Optuna run is being submitted to restore `core_claim_plus`.
+- The updated Optuna/synchronization-loss learner supports `core_claim_plus` across the default scaled benchmark and an expanded 16-train/6-test/220-cell probe.
 - Higher milestones would require broader secondary claims, such as implementing the paper's specialized Fusion Moves/MGM solvers, reproducing the synchronization-loss ablation, or running a larger version of the original public code path.
 
 ## Issues

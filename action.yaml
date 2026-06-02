@@ -1,8 +1,8 @@
 # IMPORTANT: Once you set action to 'submit' or 'done', STOP immediately.
 # Do NOT sleep, poll, or wait for jobs. The system reads this file
 # only after your turn ends. Sleeping blocks the entire pipeline.
-action: submit
+action: done
 gpus: 0
-test: true
-milestone: core_claim
-notes: "Run the expanded 16-train/6-test/220-cell Optuna TPE synchronization-loss probe to restore core_claim_plus under the audited implementation."
+test: false
+milestone: core_claim_plus
+notes: "Audited and fixed learner to use Optuna TPE staged Bayesian optimization with synchronization loss. Default and expanded scaled CPU jobs both support the core claim; environment validates."
