@@ -15,5 +15,4 @@ cd /home/user
 
 export PYTHONUNBUFFERED=1
 
-bash scripts/reproduce.sh
-python validate.py --compare
+bash scripts/expanded_core.sh

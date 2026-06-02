@@ -12,6 +12,8 @@
 ## Results
 
 - Audit on 2026-06-02 confirmed that `method/` implements the paper's actual Gaussian/cycle-consistent graph matching pipeline at reduced scale, `eval/` reads artifacts without importing `method/`, and `reference.json` validates. The audit also found that synchronization should be closer to the paper's synchronization objective and that `atlas_minus_preatlas` should be treated as a diagnostic rather than a formal held-out target; both were corrected before the next submission.
+- CPU job `2787fdde-fbc` completed the corrected default reproduction in 180 seconds and wrote `scoring/scores.json`. The unsupervised atlas reached 0.8656 +/- 0.0964 atlas accuracy, beating the unlearned linear baseline at 0.7990 +/- 0.1381 and staying at/above the supervised oracle on this scaled split (gap_to_supervised_oracle = -0.0135) while using no semantic labels for training.
+- Added `scripts/expanded_core.sh` to probe a larger 16-train/6-test/220-cell setting without overwriting the validated default `scoring/scores.json`.
 - CPU job `8a05affa-d37` completed the smoke reproduction and wrote `scoring/scores.json`.
 - Reproduced smoke scores on the tracked public sample: unlearned linear baseline atlas accuracy 0.9271 +/- 0.0104; unsupervised atlas accuracy 0.9583 +/- 0.0000; supervised oracle atlas accuracy 0.9583 +/- 0.0000.
 - The unsupervised method also achieved pre-atlas accuracy 0.9531 +/- 0.0518, atlas-minus-pre-atlas improvement 0.0052, zero gap to the supervised oracle, and `semantic_labels_used_for_training = 0.0`.
@@ -23,7 +25,7 @@
 
 ## Remaining
 
-- Higher milestones would require either implementing the paper's specialized Fusion Moves/MGM solvers or running a larger version of the original public code path. The current environment remains at `core_claim` until the updated synchronization is validated in a scheduled job.
+- The default scaled benchmark now supports `core_claim`. The next submitted job probes an expanded setting; if it succeeds with a similar no-label benefit over the baseline, the workspace can claim `core_claim_plus`.
 
 ## Issues
 
