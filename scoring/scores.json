@@ -3,21 +3,21 @@
     "scaled_manual_segmentation": {
       "results": {
         "unlearned_linear_baseline": {
-          "atlas_accuracy_mean": 0.9609375,
-          "atlas_accuracy_std": 0.03157384284630767
+          "atlas_accuracy_mean": 0.8281249999999999,
+          "atlas_accuracy_std": 0.1441908999382416
         },
         "our_unsupervised_atlas": {
-          "atlas_accuracy_mean": 0.9609375,
-          "atlas_accuracy_std": 0.03157384284630767,
-          "pre_atlas_accuracy_mean": 0.9505208333333333,
-          "pre_atlas_accuracy_std": 0.06479091304492048,
-          "atlas_minus_preatlas": 0.01041666666666674,
-          "gap_to_supervised_oracle": 0.005208333333333259,
+          "atlas_accuracy_mean": 0.8312499999999999,
+          "atlas_accuracy_std": 0.13399898942405,
+          "pre_atlas_accuracy_mean": 0.915625,
+          "pre_atlas_accuracy_std": 0.08628245162449508,
+          "atlas_minus_preatlas": -0.08437500000000009,
+          "gap_to_supervised_oracle": 0.02083333333333337,
           "semantic_labels_used_for_training": 0.0
         },
         "supervised_oracle_atlas": {
-          "atlas_accuracy_mean": 0.9661458333333333,
-          "atlas_accuracy_std": 0.035611443570774344
+          "atlas_accuracy_mean": 0.8520833333333333,
+          "atlas_accuracy_std": 0.1042499666933067
         }
       }
     }
