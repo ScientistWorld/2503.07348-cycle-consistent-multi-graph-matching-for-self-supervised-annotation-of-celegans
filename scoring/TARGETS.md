@@ -15,7 +15,5 @@ Tests whether the unsupervised atlas remains close to a supervised oracle atlas 
 - **Metric**: `gap_to_supervised_oracle` (lower is better)
 - **Run**: `bash scripts/evaluate.sh outputs/method/predictions.json`
 
-## Ablation: scaled_manual_segmentation
-Tests whether constructing an atlas improves over the pre-atlas multi-worm correspondence output.
-- **Metric**: `atlas_minus_preatlas` (higher is better)
-- **Run**: `bash scripts/evaluate.sh outputs/method/predictions.json`
+## Diagnostic: scaled_manual_segmentation
+`pre_atlas_accuracy_mean` and `atlas_minus_preatlas` may be reported as diagnostics, but they are not formal targets in this scaled benchmark because pre-atlas accuracy is measured on training worms while atlas accuracy is measured on held-out worms.

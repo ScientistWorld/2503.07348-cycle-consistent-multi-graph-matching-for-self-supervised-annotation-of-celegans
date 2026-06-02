@@ -5,12 +5,13 @@
 - Paper analysis is complete enough to define the core benchmark, metrics, baselines, and reported reference numbers.
 - The workspace now includes the public cellmatch preprocessed Li et al. sample data: 20 train worms and 6 test worms, each with 558 nuclei.
 - Implemented a scaled reproduction of the paper's computational procedure in `method/cycle_mgm.py`: Gaussian/Mahalanobis worm matching costs, staged parameter search, pairwise graph matching, synchronization into cycle-consistent cliques, atlas construction, and atlas-to-worm matching.
-- Updated clique synchronization to use connected components from all pairwise matchings, with conflict resolution by pairwise support, instead of projecting all cliques through one pivot worm.
+- Updated clique synchronization to select the pivot-induced cycle-consistent multi-matching with maximum agreement to all solved pairwise matchings, a scaled approximation of the paper's synchronization objective.
 - Implemented method-agnostic evaluation in `eval/evaluate_outputs.py`; it reads prediction artifacts and does not import from `method/`.
 - `python validate.py --reference-only` passes.
 
 ## Results
 
+- Audit on 2026-06-02 confirmed that `method/` implements the paper's actual Gaussian/cycle-consistent graph matching pipeline at reduced scale, `eval/` reads artifacts without importing `method/`, and `reference.json` validates. The audit also found that synchronization should be closer to the paper's synchronization objective and that `atlas_minus_preatlas` should be treated as a diagnostic rather than a formal held-out target; both were corrected before the next submission.
 - CPU job `8a05affa-d37` completed the smoke reproduction and wrote `scoring/scores.json`.
 - Reproduced smoke scores on the tracked public sample: unlearned linear baseline atlas accuracy 0.9271 +/- 0.0104; unsupervised atlas accuracy 0.9583 +/- 0.0000; supervised oracle atlas accuracy 0.9583 +/- 0.0000.
 - The unsupervised method also achieved pre-atlas accuracy 0.9531 +/- 0.0518, atlas-minus-pre-atlas improvement 0.0052, zero gap to the supervised oracle, and `semantic_labels_used_for_training = 0.0`.
@@ -22,7 +23,7 @@
 
 ## Remaining
 
-- Higher milestones would require either implementing the paper's specialized Fusion Moves/MGM solvers or running a larger version of the original public code path. The current environment is usable for future agents at `core_claim_plus`, but does not support `secondary_claims` or `majority`.
+- Higher milestones would require either implementing the paper's specialized Fusion Moves/MGM solvers or running a larger version of the original public code path. The current environment remains at `core_claim` until the updated synchronization is validated in a scheduled job.
 
 ## Issues
 
@@ -37,4 +38,4 @@
 ## Deviations from Paper
 
 - Scale: the paper uses 100 training worms, 100 test worms, 558 nuclei, and extensive Bayesian optimization. The default workspace run uses the public code release's 20/6 preprocessed sample with subset defaults of 12 train worms, 6 test worms, 160 nuclei, and 6 random-search trials per learning stage. This preserves the procedure while making the first job practical.
-- Solver: the paper uses specialized Fusion Moves and MGM solvers. This implementation uses SciPy linear assignment with iterative quadratic-cost linearization and pivot-based synchronization. It keeps the same cost terms, clique construction, and atlas evaluation structure, but is a simpler solver implementation for the scaled benchmark.
+- Solver: the paper uses specialized Fusion Moves and MGM solvers. This implementation uses SciPy linear assignment with iterative quadratic-cost linearization and best-agreement pivot synchronization. It keeps the same cost terms, clique construction, and atlas evaluation structure, but is a simpler solver implementation for the scaled benchmark.
