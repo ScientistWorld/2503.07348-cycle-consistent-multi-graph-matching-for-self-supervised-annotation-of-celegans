@@ -1,0 +1,213 @@
+{
+  "paper_id": "2503.07348",
+  "phase": "train",
+  "cohort": [
+    "claude-opus-4-8-xhigh",
+    "claude-opus-xhigh",
+    "gpt-5.6-sol-xhigh",
+    "gpt-5.6-terra-xhigh",
+    "gpt-5.6-luna-xhigh",
+    "gpt-5.5-xhigh",
+    "glm-5-xhigh",
+    "minimax-xhigh",
+    "grok-4.3-xhigh",
+    "gemini-3-pro-preview",
+    "gemini-3.1-flash-lite-preview",
+    "kimi-k2.6-thinking",
+    "mimo-pro-xhigh",
+    "deepseek-v4-pro-xhigh"
+  ],
+  "models_present": [
+    "gpt-5.5-xhigh",
+    "gpt-5.6-luna-xhigh",
+    "gpt-5.6-sol-xhigh",
+    "gpt-5.6-terra-xhigh"
+  ],
+  "n_models": 4,
+  "n_cells": 9,
+  "last_updated": "2026-08-12T05:09:27.708329+00:00",
+  "excluded": false,
+  "typical_spread": 0.08354859439262248,
+  "paper_baseline": 0.6185090814369977,
+  "cohort_raw": {
+    "gpt-5.5-xhigh": 0.16789190221236402,
+    "gpt-5.6-luna-xhigh": -0.7285144567002316,
+    "gpt-5.6-sol-xhigh": 0.4973515349613634,
+    "gpt-5.6-terra-xhigh": -1.0802784318740315
+  },
+  "cells": [
+    {
+      "experiment": "scaled_manual_segmentation",
+      "method": "our_unsupervised_atlas",
+      "metric": "atlas_accuracy_mean",
+      "source": 0.7735961768219832,
+      "higher_is_better": true,
+      "coefficient": 2.357677315759336,
+      "prior_weight": 1.0,
+      "spread": 0.3168080558614921,
+      "normalizer": 0.3168080558614921,
+      "effective_weight": 0.4619837098459637,
+      "cohort_imp": {
+        "gpt-5.6-sol-xhigh": 0.1577060931899643,
+        "gpt-5.6-terra-xhigh": -0.5268817204301075,
+        "gpt-5.6-luna-xhigh": -0.2962962962962963,
+        "gpt-5.5-xhigh": 0.057347670250896154
+      }
+    },
+    {
+      "experiment": "scaled_manual_segmentation",
+      "method": "our_unsupervised_atlas",
+      "metric": "atlas_accuracy_min",
+      "source": 0.6559139784946236,
+      "higher_is_better": true,
+      "coefficient": 0.6022394023488654,
+      "prior_weight": 0.25,
+      "spread": 0.3090774442362793,
+      "normalizer": 0.3090774442362793,
+      "effective_weight": 0.11512842396691349,
+      "cohort_imp": {
+        "gpt-5.6-sol-xhigh": 0.2706093189964158,
+        "gpt-5.6-terra-xhigh": -0.4390681003584229,
+        "gpt-5.6-luna-xhigh": -0.22401433691756267,
+        "gpt-5.5-xhigh": 0.03942652329749108
+      }
+    },
+    {
+      "experiment": "scaled_manual_segmentation",
+      "method": "our_unsupervised_atlas",
+      "metric": "atlas_accuracy_std",
+      "source": 0.08489824843841409,
+      "higher_is_better": false,
+      "coefficient": 1.2049191811037032,
+      "prior_weight": 0.1,
+      "spread": 0.03938164467469114,
+      "normalizer": 0.03938164467469114,
+      "effective_weight": 0.02934930679324389,
+      "cohort_imp": {
+        "gpt-5.6-sol-xhigh": 0.07935845244349433,
+        "gpt-5.6-terra-xhigh": 0.060008563066849374,
+        "gpt-5.6-luna-xhigh": 0.031688568769015414,
+        "gpt-5.5-xhigh": -0.011324942147184602
+      }
+    },
+    {
+      "experiment": "scaled_manual_segmentation",
+      "method": "our_unsupervised_atlas",
+      "metric": "invalid_assignment_rate",
+      "source": 0.0,
+      "higher_is_better": false,
+      "coefficient": 0.6923239853529556,
+      "prior_weight": 0.2,
+      "spread": 0.0,
+      "normalizer": 0.08354859439262248,
+      "effective_weight": 0.0357762326721708,
+      "cohort_imp": {
+        "gpt-5.6-sol-xhigh": 0.0,
+        "gpt-5.6-terra-xhigh": 0.0,
+        "gpt-5.6-luna-xhigh": 0.0,
+        "gpt-5.5-xhigh": 0.0
+      }
+    },
+    {
+      "experiment": "scaled_manual_segmentation",
+      "method": "our_unsupervised_atlas",
+      "metric": "pre_atlas_accuracy_mean",
+      "source": 0.8142174432497012,
+      "higher_is_better": true,
+      "coefficient": 0.0,
+      "prior_weight": 0.0,
+      "spread": 0.3197132626509495,
+      "normalizer": 0.3197132626509495,
+      "effective_weight": 0.0,
+      "cohort_imp": {
+        "gpt-5.6-sol-xhigh": 0.14575866188769415,
+        "gpt-5.6-terra-xhigh": -0.5419789290757032,
+        "gpt-5.6-luna-xhigh": -0.26836917562724016,
+        "gpt-5.5-xhigh": 0.07706093189964158
+      }
+    },
+    {
+      "experiment": "scaled_manual_segmentation",
+      "method": "our_unsupervised_atlas",
+      "metric": "pre_atlas_accuracy_std",
+      "source": 0.09728265175504103,
+      "higher_is_better": false,
+      "coefficient": 0.0,
+      "prior_weight": 0.0,
+      "spread": 0.03468996543838615,
+      "normalizer": 0.03468996543838615,
+      "effective_weight": 0.0,
+      "cohort_imp": {
+        "gpt-5.6-sol-xhigh": 0.08044991244368455,
+        "gpt-5.6-terra-xhigh": 0.04262272864693527,
+        "gpt-5.6-luna-xhigh": 0.004315652341544005,
+        "gpt-5.5-xhigh": 0.011653026992932927
+      }
+    },
+    {
+      "experiment": "scaled_manual_segmentation",
+      "method": "our_unsupervised_atlas",
+      "metric": "atlas_minus_preatlas",
+      "source": -0.04062126642771802,
+      "higher_is_better": true,
+      "coefficient": 0.0,
+      "prior_weight": 0.0,
+      "spread": 0.021856787095124813,
+      "normalizer": 0.021856787095124813,
+      "effective_weight": 0.0,
+      "cohort_imp": {
+        "gpt-5.6-sol-xhigh": 0.011947431302270162,
+        "gpt-5.6-terra-xhigh": 0.015097208645595744,
+        "gpt-5.6-luna-xhigh": -0.027927120669056116,
+        "gpt-5.5-xhigh": -0.019713261648745428
+      }
+    },
+    {
+      "experiment": "scaled_manual_segmentation",
+      "method": "our_unsupervised_atlas",
+      "metric": "gap_to_supervised_oracle",
+      "source": 0.053763440860215006,
+      "higher_is_better": false,
+      "coefficient": 3.4616199267647785,
+      "prior_weight": 0.5,
+      "spread": 0.08354859439262248,
+      "normalizer": 0.08354859439262248,
+      "effective_weight": 0.17888116336085402,
+      "cohort_imp": {
+        "gpt-5.6-sol-xhigh": 0.05017921146953419,
+        "gpt-5.6-terra-xhigh": -0.09020310633213866,
+        "gpt-5.6-luna-xhigh": -0.11051373954599775,
+        "gpt-5.5-xhigh": 0.036439665471923566
+      }
+    },
+    {
+      "experiment": "scaled_manual_segmentation",
+      "method": "our_unsupervised_atlas",
+      "metric": "semantic_labels_used_for_training",
+      "source": 0.0,
+      "higher_is_better": false,
+      "coefficient": 3.4616199267647785,
+      "prior_weight": 1.0,
+      "spread": 0.0,
+      "normalizer": 0.08354859439262248,
+      "effective_weight": 0.17888116336085402,
+      "cohort_imp": {
+        "gpt-5.6-sol-xhigh": 0.0,
+        "gpt-5.6-terra-xhigh": 0.0,
+        "gpt-5.6-luna-xhigh": 0.0,
+        "gpt-5.5-xhigh": 0.0
+      }
+    }
+  ],
+  "mode": "innovate",
+  "pruned_cells": [
+    {
+      "experiment": "scaled_manual_segmentation",
+      "method": "our_unsupervised_atlas",
+      "metric": "atlas_accuracy_mean"
+    }
+  ],
+  "locked": true,
+  "locked_at": "2026-08-12T05:12:19.163530+00:00",
+  "locked_n_models": 4
+}
