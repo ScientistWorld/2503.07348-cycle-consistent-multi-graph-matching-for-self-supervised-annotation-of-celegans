@@ -3,6 +3,6 @@
 # only after your turn ends.
 action: submit
 gpus: 0
-test: true
+test: false
 milestone: core_claim
-notes: "Smoke test of hardened gym: pylibmgm timings + tiny end-to-end method/baseline/oracle/evaluators/audit"
+notes: "Hardening run: paper-faithful reference x3 seeds, fixed comparators, better/weaker variants, shortcut audit through no-arg evaluators"
