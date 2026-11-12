@@ -1,19 +1,9 @@
 #!/bin/bash
-# Score the held-out evaluation slice from the same prediction artifact.
+# Hidden-test scoring: every method directory under outputs/ plus the fixed
+# comparators in eval/test/fixed/, scored on the 10 hidden test worms.
 #
-# Usage mirrors scripts/evaluate.sh:
-#   bash scripts/evaluate_test.sh [predictions.json]
-
+# Usage (no arguments): bash scripts/evaluate_test.sh
 set -e
-
 cd /home/user
-
 mkdir -p scoring
-
-PREDICTIONS="${1:-outputs/method/predictions.json}"
-MATCH_ARGS=()
-if [ -f scoring/scores_train.json ]; then
-  MATCH_ARGS=(--match-methods-from scoring/scores_train.json)
-fi
-
-python -m eval.test.evaluate_slice "$PREDICTIONS" --output scoring/scores_test.json "${MATCH_ARGS[@]}"
+python eval/test/evaluate_slice.py --output scoring/scores_test.json

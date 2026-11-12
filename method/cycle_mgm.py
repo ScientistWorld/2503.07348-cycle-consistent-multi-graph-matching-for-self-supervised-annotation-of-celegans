@@ -1,454 +1,450 @@
+"""Cycle-consistent multi-graph matching for self-supervised C. elegans atlases.
+
+Reproduction of Karg, Stricker et al. (arXiv:2503.07348) on the benchmark's
+anonymized worms. Pipeline (paper Sec. 3 and Appendix B):
+
+1. Pre-processing / re-alignment target (Sec. 3.4): all pool worms are matched
+   pairwise with dense, unlearned linear costs (identity covariances), the
+   matchings are synchronised densely, and the worm whose matchings change least
+   becomes the re-alignment target.
+2. First re-alignment: 7 iterations of unlearned dense linear worm-to-target
+   matching + affine least squares, applied to every worm (pool and held-out).
+3. Bayesian optimisation of the 12 cross-nucleus Gaussian parameters on
+   ``N_learn`` pool worms, with the synchronisation loss (objective of the dense
+   GREEDA synchronisation of the independently solved pairwise problems):
+     stage 1  diagonal centroid / radius covariances, dense linear assignment;
+     stage 2  sparsity (K_min, tau_cen, tau_rad), multi-objective TPE against the
+              mean number of allowed assignments, Pareto selection rule of App. B;
+     stage 3  diagonal offset covariance, sparse quadratic GM (Fusion Moves).
+4. Second re-alignment: 7 iterations with the fully learned sparse quadratic
+   model, applied to every worm.
+5. Multi-graph matching of the pool: all pairwise GM problems with the learned
+   model (c0 = 40) solved with Fusion Moves, then dense synchronisation into
+   cycle-consistent cliques.
+6. Unsupervised atlas: nucleus-specific Gaussian statistics of the cliques, cost
+   weights lambda = ||diag(Sigma)|| normalised to length sqrt(3) (Sec. 3.3).
+7. Worm-to-atlas GM (Fusion Moves) for every held-out worm.
+
+No semantic label is read anywhere. The output artifact holds the clique id of
+every pool nucleus and the atlas label (clique id) of every held-out nucleus;
+the evaluators attach biological names afterwards (paper Sec. 3.3).
+"""
 from __future__ import annotations
 
 import argparse
+import copy
 import json
-from dataclasses import asdict, dataclass
+import math
+import shutil
+import time
 from itertools import combinations
 from pathlib import Path
 
 import numpy as np
 
-from data.cellmatch_data import Worm, limit_cells_by_input_order, load_split
-
-
-try:
-    from scipy.optimize import linear_sum_assignment
-except Exception:  # pragma: no cover - used only when scipy is unavailable.
-    linear_sum_assignment = None
+from data import gmtools as gm
+from data.worms import load_group
 
 try:
     import optuna
-except Exception:  # pragma: no cover - setup.sh installs optuna for jobs.
+except ImportError:  # pragma: no cover
     optuna = None
 
-
-@dataclass
-class Params:
-    cen_cov: tuple[float, float, float] = (130.0, 43.0, 28.0)
-    rad_cov: tuple[float, float, float] = (156.0, 200.0, 174.0)
-    off_cov: tuple[float, float, float] = (172.0, 32.0, 44.0)
-    k_min: int = 14
-    tau_cen: float = 1.95
-    tau_rad: float = 0.15
-    w_cen: float = 1.0
-    w_rad: float = 1.0
-    w_off: float = 1.0
-    neighbor_count: int = 5
-    quadratic_iters: int = 2
+PAPER_ITERATIONS = 7
+C0_LEARN = 10000.0  # App. B: c0 for cost learning and atlas matching
+C0_MGM = 40.0  # App. B: c0 for the MGM after cost learning
 
 
 def log(message: str) -> None:
-    print(f"[cycle-mgm] {message}", flush=True)
+    print(f"[cycle-mgm {time.strftime('%H:%M:%S')}] {message}", flush=True)
 
 
-def mahalanobis(a: np.ndarray, b: np.ndarray, cov_diag: tuple[float, float, float]) -> np.ndarray:
-    return np.sum(((a - b) ** 2) / np.asarray(cov_diag), axis=-1)
+# --------------------------------------------------------------------------
+# Multi-graph helpers
+# --------------------------------------------------------------------------
 
 
-def solve_assignment(cost: np.ndarray) -> list[int]:
-    if linear_sum_assignment is None:
-        remaining = set(range(cost.shape[1]))
-        out = [-1] * cost.shape[0]
-        for i in np.argsort(cost.min(axis=1)):
-            j = min(remaining, key=lambda c: cost[i, c])
-            out[i] = int(j)
-            remaining.remove(j)
-        return out
-    row, col = linear_sum_assignment(cost)
-    out = [-1] * cost.shape[0]
-    for i, j in zip(row, col):
-        out[int(i)] = int(j)
+def pairwise_all(worms, params: gm.WormParams, quadratic: bool, seed: int) -> dict:
+    out = {}
+    for k, (a, b) in enumerate(combinations(range(len(worms)), 2)):
+        out[(a, b)] = gm.match_worms(worms[a], worms[b], params, quadratic, seed=seed * 1009 + k)
     return out
 
 
-def unary_cost(a: Worm, b: Worm, params: Params, sparse: bool) -> np.ndarray:
-    cen = mahalanobis(a.centroids[:, None, :], b.centroids[None, :, :], params.cen_cov)
-    rad = mahalanobis(a.radii[:, None, :], b.radii[None, :, :], params.rad_cov)
-    cost = params.w_cen * cen + params.w_rad * rad
-    if sparse:
-        mask = (cen <= params.tau_cen) & (rad <= params.tau_rad)
-        for i in range(cost.shape[0]):
-            keep = np.argsort(cost[i])[: params.k_min]
-            mask[i, keep] = True
-        for j in range(cost.shape[1]):
-            keep = np.argsort(cost[:, j])[: params.k_min]
-            mask[keep, j] = True
-        cost = np.where(mask, cost, 1e9)
-    return cost
+def sync_objective(worms, labelings: dict, iterations: int = 3) -> float:
+    sizes = [w.n for w in worms]
+    return float(gm.synchronize(labelings, sizes, iterations=iterations).evaluate())
 
 
-def nearest_neighbors(worm: Worm, k: int, params: Params) -> list[np.ndarray]:
-    dist = mahalanobis(worm.centroids[:, None, :], worm.centroids[None, :, :], params.cen_cov)
-    np.fill_diagonal(dist, np.inf)
-    return [np.argsort(dist[i])[:k] for i in range(len(worm.names))]
+def star_center(worms, seed: int) -> int:
+    """Worm whose dense unlearned matchings change least under dense synchronisation."""
+    params = gm.WormParams(c0=C0_LEARN)
+    pre = pairwise_all(worms, params, quadratic=False, seed=seed)
+    sync = gm.synchronize(pre, [w.n for w in worms], iterations=1,
+                          opt_level=gm.OptimizationLevel.FAST)
+    post = gm.sync_labelings(sync)
+    changes = np.zeros(len(worms))
+    for (a, b), lab in pre.items():
+        diff = int(np.sum(np.asarray(lab) != post[(a, b)]))
+        changes[a] += diff
+        changes[b] += diff
+    log(f"re-alignment target search: changed matchings per worm {changes.astype(int).tolist()}")
+    return int(np.argmin(changes))
 
 
-def pairwise_match(a: Worm, b: Worm, params: Params, sparse: bool = True, quadratic: bool = True) -> list[int]:
-    base = unary_cost(a, b, params, sparse=sparse)
-    labeling = solve_assignment(base)
-    if not quadratic:
-        return labeling
-    neigh = nearest_neighbors(a, params.neighbor_count, params)
-    for _ in range(params.quadratic_iters):
-        qcost = base.copy()
-        for i in range(len(a.names)):
-            for t in range(len(b.names)):
-                acc = 0.0
-                used = 0
-                for j in neigh[i]:
-                    matched = labeling[int(j)]
-                    if matched < 0 or matched == t:
-                        continue
-                    off_a = a.centroids[i] - a.centroids[int(j)]
-                    off_b = b.centroids[t] - b.centroids[matched]
-                    acc += float(mahalanobis(off_a, off_b, params.off_cov))
-                    used += 1
-                if used:
-                    qcost[i, t] += params.w_off * acc / used
-        labeling = solve_assignment(qcost)
-    return labeling
+def realign(worms: list, target, params: gm.WormParams, quadratic: bool, iterations: int,
+            seed: int, label: str) -> list:
+    """Repeated worm-to-target matching + affine least squares (Sec. 3.4)."""
+    cen_prec = 1.0 / np.asarray(params.cen_var, dtype=float)
+    off_prec = 1.0 / np.asarray(params.off_var, dtype=float)
+    worms = list(worms)
+    for it in range(iterations):
+        t0 = time.time()
+        shift = []
+        for k, w in enumerate(worms):
+            lab = gm.match_worms(target, w, params, quadratic, seed=seed * 7919 + it * 131 + k)
+            idx = np.nonzero(lab >= 0)[0]
+            r, o = gm.affine_fit_diag(target.centroids[idx], w.centroids[lab[idx]], cen_prec, off_prec)
+            new = gm.apply_affine(w.centroids, r, o)
+            shift.append(float(np.sqrt(((new - w.centroids) ** 2).sum(1)).mean()))
+            worms[k] = w.with_centroids(new)
+        log(f"{label} re-alignment {it + 1}/{iterations}: mean shift {np.mean(shift):.3f} "
+            f"({time.time() - t0:.0f}s)")
+    return worms
 
 
-def invert(labeling: list[int], n: int) -> list[int]:
-    inv = [-1] * n
-    for i, j in enumerate(labeling):
-        if j >= 0:
-            inv[j] = i
-    return inv
+# --------------------------------------------------------------------------
+# Bayesian optimisation (Sec. 3.2)
+# --------------------------------------------------------------------------
 
 
-def all_pairwise(worms: list[Worm], params: Params, sparse: bool, quadratic: bool) -> dict[str, list[int]]:
-    pairs: dict[str, list[int]] = {}
-    for i, j in combinations(range(len(worms)), 2):
-        pairs[f"{i}-{j}"] = pairwise_match(worms[i], worms[j], params, sparse=sparse, quadratic=quadratic)
-    return pairs
+def _sampler(seed: int, trials: int, multi: bool = False):
+    startup = max(2, min(10, trials // 3))
+    return optuna.samplers.TPESampler(seed=seed, n_startup_trials=startup)
 
 
-def get_mapping(pairs: dict[str, list[int]], i: int, j: int, n: int) -> list[int]:
-    if i == j:
-        return list(range(n))
-    if i < j:
-        return pairs[f"{i}-{j}"]
-    return invert(pairs[f"{j}-{i}"], n)
-
-
-def cycle_loss(worms: list[Worm], pairs: dict[str, list[int]]) -> int:
-    n = len(worms[0].names)
-    loss = 0
-    for a, b, c in combinations(range(len(worms)), 3):
-        ab = get_mapping(pairs, a, b, n)
-        ac = get_mapping(pairs, a, c, n)
-        bc = get_mapping(pairs, b, c, n)
-        for i in range(n):
-            via = bc[ab[i]] if ab[i] >= 0 else -1
-            if via != ac[i]:
-                loss += 1
-    return loss
-
-
-def avg_allowed_assignments(worms: list[Worm], params: Params) -> float:
-    vals = []
-    for i, j in combinations(range(len(worms)), 2):
-        vals.append(float(np.sum(unary_cost(worms[i], worms[j], params, sparse=True) < 1e8)))
-    return float(np.mean(vals))
-
-
-def trial_params(base: Params, stage: int, trial: "optuna.Trial") -> Params:
-    p = Params(**asdict(base))
-    if stage == 1:
-        p.cen_cov = tuple(trial.suggest_float(f"cen_cov_{axis}", 10.0, 220.0) for axis in range(3))
-        p.rad_cov = tuple(trial.suggest_float(f"rad_cov_{axis}", 10.0, 220.0) for axis in range(3))
-    elif stage == 2:
-        p.k_min = trial.suggest_int("k_min", 4, 20)
-        p.tau_cen = trial.suggest_float("tau_cen", 0.1, 16.0, log=True)
-        p.tau_rad = trial.suggest_float("tau_rad", 0.05, 10.0, log=True)
-    elif stage == 3:
-        p.off_cov = tuple(trial.suggest_float(f"off_cov_{axis}", 5.0, 220.0) for axis in range(3))
-    return p
-
-
-def synchronization_loss(worms: list[Worm], pairs: dict[str, list[int]]) -> int:
-    n = len(worms[0].names)
-    cliques = synchronize_cliques(worms, pairs)
-    max_edges = len(cliques) * len(worms) * (len(worms) - 1) // 2
-    return max_edges - synchronization_agreement(cliques, pairs, n)
-
-
-def matching_loss(worms: list[Worm], pairs: dict[str, list[int]], loss: str) -> int:
-    if loss == "cycle":
-        return cycle_loss(worms, pairs)
-    return synchronization_loss(worms, pairs)
-
-
-def fallback_trial_params(base: Params, stage: int, rng: np.random.Generator) -> Params:
-    p = Params(**asdict(base))
-    if stage == 1:
-        p.cen_cov = tuple(float(x) for x in rng.uniform(10.0, 220.0, size=3))
-        p.rad_cov = tuple(float(x) for x in rng.uniform(10.0, 220.0, size=3))
-    elif stage == 2:
-        p.k_min = int(rng.integers(4, 21))
-        p.tau_cen = float(10 ** rng.uniform(np.log10(0.1), np.log10(16.0)))
-        p.tau_rad = float(10 ** rng.uniform(np.log10(0.05), np.log10(10.0)))
-    elif stage == 3:
-        p.off_cov = tuple(float(x) for x in rng.uniform(5.0, 220.0, size=3))
-    return p
-
-
-def fallback_learn_params(worms: list[Worm], trials: int, seed: int, loss: str) -> Params:
-    rng = np.random.default_rng(seed)
-    params = Params()
-    for stage in (1, 2, 3):
-        log(f"Optuna unavailable; falling back to seeded random stage {stage}/3")
-        best = None
-        for trial in range(max(1, trials)):
-            cand = fallback_trial_params(params, stage, rng)
-            pairs = all_pairwise(worms, cand, sparse=stage >= 2, quadratic=stage == 3)
-            objective_loss = matching_loss(worms, pairs, loss)
-            sparsity = avg_allowed_assignments(worms, cand) if stage == 2 else 0.0
-            objective = objective_loss + (1e-4 * sparsity if stage == 2 else 0.0)
-            if best is None or objective < best[0]:
-                best = (objective, cand)
-            log(f"stage {stage} trial {trial + 1}: objective={objective:.3f}")
-        params = best[1]
-    return params
-
-
-def learn_params(worms: list[Worm], trials: int, seed: int, loss: str, sparsity_limit: float) -> Params:
+def learn_parameters(worms, trials: tuple[int, int, int], seed: int, max_avg_assignments: float,
+                     loss_tolerance: float, stages=(1, 2, 3), start: gm.WormParams | None = None,
+                     history: dict | None = None) -> tuple[gm.WormParams, dict]:
     if optuna is None:
-        return fallback_learn_params(worms, trials, seed, loss)
-
+        raise RuntimeError("optuna is required for the paper's Bayesian optimisation")
     optuna.logging.set_verbosity(optuna.logging.WARNING)
-    params = Params()
-    for stage in (1, 2, 3):
-        log(f"Bayesian optimization stage {stage}/3 with {len(worms)} worms and {max(1, trials)} trials")
-        sampler = optuna.samplers.TPESampler(seed=seed + stage)
-        if stage == 2:
-            study = optuna.create_study(directions=["minimize", "minimize"], sampler=sampler)
+    params = copy.deepcopy(start) if start is not None else gm.WormParams(c0=C0_LEARN)
+    history = history if history is not None else {}
 
-            def objective(trial: "optuna.Trial") -> tuple[float, float]:
-                cand = trial_params(params, stage, trial)
-                pairs = all_pairwise(worms, cand, sparse=True, quadratic=False)
-                objective_loss = float(matching_loss(worms, pairs, loss))
-                sparsity = avg_allowed_assignments(worms, cand)
-                trial.set_user_attr("params", asdict(cand))
-                log(
-                    f"stage {stage} trial {trial.number + 1}: "
-                    f"loss={objective_loss:.3f}, allowed={sparsity:.1f}"
-                )
-                return objective_loss, sparsity
+    if 1 in stages:
+        t0 = time.time()
 
-            study.optimize(objective, n_trials=max(1, trials), show_progress_bar=False)
-            candidates = study.best_trials or study.trials
-            feasible = [t for t in candidates if t.values and t.values[1] < sparsity_limit]
-            if not feasible:
-                feasible = [t for t in candidates if t.values]
-            min_loss = min(float(t.values[0]) for t in feasible)
-            near_best = [t for t in feasible if float(t.values[0]) <= min_loss * 1.0005]
-            chosen = min(near_best, key=lambda t: float(t.values[1]))
-        else:
-            study = optuna.create_study(direction="minimize", sampler=sampler)
+        def objective1(trial):
+            p = copy.deepcopy(params)
+            p.cen_var = tuple(float(trial.suggest_int(f"cen_{a}", 1, 200)) for a in "xyz")
+            p.rad_var = tuple(float(trial.suggest_int(f"rad_{a}", 1, 200)) for a in "xyz")
+            p.k_min = 0
+            loss = sync_objective(worms, pairwise_all(worms, p, quadratic=False, seed=seed))
+            log(f"BO stage 1 trial {trial.number + 1}/{trials[0]}: loss {loss:.0f} "
+                f"cen {p.cen_var} rad {p.rad_var}")
+            return loss
 
-            def objective(trial: "optuna.Trial") -> float:
-                cand = trial_params(params, stage, trial)
-                pairs = all_pairwise(worms, cand, sparse=stage >= 2, quadratic=stage == 3)
-                objective_loss = float(matching_loss(worms, pairs, loss))
-                trial.set_user_attr("params", asdict(cand))
-                log(f"stage {stage} trial {trial.number + 1}: loss={objective_loss:.3f}")
-                return objective_loss
+        study = optuna.create_study(direction="minimize", sampler=_sampler(seed + 1, trials[0]))
+        study.optimize(objective1, n_trials=trials[0])
+        best = study.best_params
+        params.cen_var = tuple(float(best[f"cen_{a}"]) for a in "xyz")
+        params.rad_var = tuple(float(best[f"rad_{a}"]) for a in "xyz")
+        history["stage1"] = {"best_loss": study.best_value, "params": params.to_dict(),
+                             "seconds": time.time() - t0,
+                             "losses": [t.value for t in study.trials]}
+        log(f"BO stage 1 done: {params.cen_var} {params.rad_var} loss {study.best_value:.0f}")
 
-            study.optimize(objective, n_trials=max(1, trials), show_progress_bar=False)
-            chosen = study.best_trial
-        params = Params(**chosen.user_attrs["params"])
-        log(f"selected stage {stage} parameters: {asdict(params)}")
-    return params
+    if 2 in stages:
+        t0 = time.time()
+        norm_cen = float(np.linalg.norm(1.0 / np.asarray(params.cen_var)))
+        norm_rad = float(np.linalg.norm(1.0 / np.asarray(params.rad_var)))
 
+        def stage2_params(values) -> gm.WormParams:
+            p = copy.deepcopy(params)
+            p.k_min = int(values["k_min"])
+            p.tau_cen = float(values["tau_cen"]) * norm_cen
+            p.tau_rad = float(values["tau_rad"]) * norm_rad
+            return p
 
-def synchronize_cliques(worms: list[Worm], pairs: dict[str, list[int]]) -> list[dict[int, int]]:
-    n = len(worms[0].names)
-    best_score = -1
-    best_cliques: list[dict[int, int]] = []
-    for pivot in range(len(worms)):
-        cliques: list[dict[int, int]] = []
-        for cell in range(n):
-            clique = {pivot: cell}
-            for other in range(len(worms)):
-                if other == pivot:
-                    continue
-                mapped = get_mapping(pairs, pivot, other, n)[cell]
-                if mapped >= 0:
-                    clique[other] = mapped
-            cliques.append(clique)
-        score = synchronization_agreement(cliques, pairs, n)
-        if score > best_score:
-            best_score = score
-            best_cliques = cliques
-    return best_cliques
+        def objective2(trial):
+            values = {
+                "k_min": trial.suggest_int("k_min", 7, 20),
+                "tau_cen": trial.suggest_int("tau_cen", 1, 300),
+                "tau_rad": trial.suggest_int("tau_rad", 1, 100),
+            }
+            p = stage2_params(values)
+            loss = sync_objective(worms, pairwise_all(worms, p, quadratic=False, seed=seed))
+            sizes = [gm.allowed_assignments(worms[a], worms[b], p)
+                     for a, b in combinations(range(len(worms)), 2)]
+            mean_assign = float(np.mean(sizes))
+            log(f"BO stage 2 trial {trial.number + 1}/{trials[1]}: loss {loss:.0f} "
+                f"allowed {mean_assign:.0f} {values}")
+            return loss, mean_assign
 
+        study = optuna.create_study(directions=["minimize", "minimize"],
+                                    sampler=_sampler(seed + 2, trials[1], multi=True))
+        study.optimize(objective2, n_trials=trials[1])
+        front = [t for t in study.best_trials if t.values[1] < max_avg_assignments]
+        if not front:
+            front = [t for t in study.trials if t.values is not None]
+            front = [min(front, key=lambda t: t.values[1])]
+        min_loss = min(t.values[0] for t in front)
+        boundary = math.ceil(min_loss + abs(min_loss * loss_tolerance))
+        chosen = min((t for t in front if t.values[0] <= boundary), key=lambda t: t.values[1])
+        params = stage2_params(chosen.params)
+        history["stage2"] = {"chosen": chosen.params, "values": list(chosen.values),
+                             "params": params.to_dict(), "seconds": time.time() - t0,
+                             "pareto": [list(t.values) for t in study.best_trials]}
+        log(f"BO stage 2 done: k_min {params.k_min} tau_cen {params.tau_cen:.3f} "
+            f"tau_rad {params.tau_rad:.3f} values {chosen.values}")
 
-def synchronization_agreement(cliques: list[dict[int, int]], pairs: dict[str, list[int]], n: int) -> int:
-    """Agreement with independently solved pairwise matchings.
+    if 3 in stages:
+        t0 = time.time()
 
-    The paper's synchronization mode finds a cycle-consistent approximation
-    that changes as few pairwise matches as possible. This scaled
-    implementation restricts the search to pivot-induced consistent
-    multi-matchings and selects the one with maximum agreement.
-    """
-    score = 0
-    for clique in cliques:
-        for i, j in combinations(sorted(clique), 2):
-            score += int(get_mapping(pairs, i, j, n)[clique[i]] == clique[j])
-    return score
+        def objective3(trial):
+            p = copy.deepcopy(params)
+            p.off_var = tuple(float(trial.suggest_int(f"off_{a}", 1, 200)) for a in "xyz")
+            loss = sync_objective(worms, pairwise_all(worms, p, quadratic=True, seed=seed))
+            log(f"BO stage 3 trial {trial.number + 1}/{trials[2]}: loss {loss:.0f} off {p.off_var}")
+            return loss
 
-
-def induce_clique_labels(cliques: list[dict[int, int]], worms: list[Worm]) -> list[str]:
-    candidates = []
-    for cidx, clique in enumerate(cliques):
-        counts: dict[str, int] = {}
-        for wid, nid in clique.items():
-            label = worms[wid].names[nid]
-            counts[label] = counts.get(label, 0) + 1
-        for label, count in counts.items():
-            candidates.append((count, cidx, label))
-    candidates.sort(reverse=True)
-    assigned_cliques: set[int] = set()
-    used_labels: set[str] = set()
-    labels = [f"UNASSIGNED_{i}" for i in range(len(cliques))]
-    for _, cidx, label in candidates:
-        if cidx in assigned_cliques or label in used_labels:
-            continue
-        labels[cidx] = label
-        assigned_cliques.add(cidx)
-        used_labels.add(label)
-    return labels
+        study = optuna.create_study(direction="minimize", sampler=_sampler(seed + 3, trials[2]))
+        study.optimize(objective3, n_trials=trials[2])
+        best = study.best_params
+        params.off_var = tuple(float(best[f"off_{a}"]) for a in "xyz")
+        history["stage3"] = {"best_loss": study.best_value, "params": params.to_dict(),
+                             "seconds": time.time() - t0,
+                             "losses": [t.value for t in study.trials]}
+        log(f"BO stage 3 done: off {params.off_var} loss {study.best_value:.0f}")
+    return params, history
 
 
-def build_atlas(cliques: list[dict[int, int]], worms: list[Worm], labels: list[str]) -> Worm:
-    centroids = []
-    radii = []
-    for clique in cliques:
-        centroids.append(np.mean([worms[wid].centroids[nid] for wid, nid in clique.items()], axis=0))
-        radii.append(np.mean([worms[wid].radii[nid] for wid, nid in clique.items()], axis=0))
-    return Worm("unsupervised_atlas", labels, np.asarray(centroids), np.asarray(radii))
+# --------------------------------------------------------------------------
+# Atlas construction and annotation
+# --------------------------------------------------------------------------
 
 
-def supervised_atlas(worms: list[Worm]) -> Worm:
-    common = set(worms[0].names)
-    for worm in worms[1:]:
-        common &= set(worm.names)
-    labels = [label for label in worms[0].names if label in common]
-    centroids = []
-    radii = []
-    for label in labels:
-        c = []
-        r = []
-        for worm in worms:
-            idx = worm.names.index(label)
-            c.append(worm.centroids[idx])
-            r.append(worm.radii[idx])
-        centroids.append(np.mean(c, axis=0))
-        radii.append(np.mean(r, axis=0))
-    return Worm("supervised_atlas", labels, np.asarray(centroids), np.asarray(radii))
+def atlas_weights(params: gm.WormParams, ablate: tuple[float, float, float]) -> tuple:
+    lam = np.array([np.linalg.norm(params.cen_var), np.linalg.norm(params.rad_var),
+                    np.linalg.norm(params.off_var)], dtype=float)
+    lam *= math.sqrt(3.0) / np.linalg.norm(lam)
+    return tuple(float(v) for v in lam * np.asarray(ablate, dtype=float))
 
 
-def evaluate_pre_atlas(cliques: list[dict[int, int]], clique_labels: list[str], worms: list[Worm]) -> list[float]:
-    acc = []
-    for wid, worm in enumerate(worms):
-        correct = total = 0
-        for label, clique in zip(clique_labels, cliques):
-            if wid not in clique:
-                continue
-            total += 1
-            correct += int(worm.names[clique[wid]] == label)
-        acc.append(correct / total if total else 0.0)
-    return acc
+def membership_arrays(pool, membership: list[np.ndarray]):
+    n_groups = int(max((m.max() for m in membership), default=-1)) + 1
+    n = len(pool)
+    x = np.zeros((n, n_groups, 3))
+    r = np.zeros((n, n_groups, 3))
+    member = np.zeros((n, n_groups), dtype=bool)
+    for w, (worm, mem) in enumerate(zip(pool, membership)):
+        nodes = np.nonzero(mem >= 0)[0]
+        x[w, mem[nodes]] = worm.centroids[nodes]
+        r[w, mem[nodes]] = worm.radii[nodes]
+        member[w, mem[nodes]] = True
+    return x, r, member, np.arange(n_groups)
 
 
-def match_atlas(atlas: Worm, targets: list[Worm], params: Params, quadratic: bool) -> list[list[int]]:
-    return [pairwise_match(atlas, target, params, sparse=False, quadratic=quadratic) for target in targets]
+def build_unsupervised_atlas(pool, membership, weights, shrinkage: float = 0.0) -> gm.Atlas:
+    x, r, member, ids = membership_arrays(pool, membership)
+    return gm.build_atlas(x, r, member, ids, weights=weights, shrinkage=shrinkage,
+                          c0=C0_LEARN, k_min=11, tau_cen=16.0, tau_rad=25.0)
+
+
+def annotate(atlas: gm.Atlas, worms, params: gm.WormParams, quadratic: bool, seed: int) -> dict:
+    out = {}
+    for k, w in enumerate(worms):
+        lab = gm.match_atlas(atlas, w, target_nbr_var=params.cen_var,
+                             target_nbr_k=params.neighbor_count, quadratic=quadratic,
+                             seed=seed * 104729 + k)
+        out[w.worm_id] = gm.node_labels(atlas, lab, w.n)
+    return out
+
+
+# --------------------------------------------------------------------------
+# Checkpoint helpers
+# --------------------------------------------------------------------------
+
+
+def save_worms(path: Path, groups: dict, extra: dict | None = None) -> None:
+    arrays = {f"{g}/{w.worm_id}": w.centroids for g, ws in groups.items() for w in ws}
+    np.savez(path, **arrays)
+    if extra is not None:
+        path.with_suffix(".json").write_text(json.dumps(extra, indent=2))
+
+
+def load_worms(path: Path, groups: dict) -> dict:
+    data = np.load(path)
+    return {g: [w.with_centroids(data[f"{g}/{w.worm_id}"]) for w in ws] for g, ws in groups.items()}
+
+
+# --------------------------------------------------------------------------
+# Main pipeline
+# --------------------------------------------------------------------------
 
 
 def run(args: argparse.Namespace) -> None:
-    log("loading sample worms")
-    train = load_split(args.train_dir, args.train_worms)
-    test = load_split(args.test_dir, args.test_worms)
-    train = limit_cells_by_input_order(train, args.cells)
-    test = limit_cells_by_input_order(test, args.cells)
-    cell_count = min(len(w.names) for w in train + test)
-    if any(len(w.names) != cell_count for w in train + test):
-        raise ValueError("all worms must expose the same number of cells for this scaled matcher")
-    log(f"using {len(train)} train worms, {len(test)} test worms, {cell_count} cells")
+    t_start = time.time()
+    work = Path(args.work)
+    work.mkdir(parents=True, exist_ok=True)
+    reuse = Path(args.reuse) if args.reuse else None
+    if reuse is not None:
+        patterns = {"prealign": ["prealign.npz", "prealign.json"], "bo": ["bo.json"],
+                    "postalign": ["postalign.npz"], "mgm": ["mgm_*.json"]}
+        for stage in [s for s in args.reuse_stages.split(",") if s]:
+            for pattern in patterns[stage]:
+                for src_file in reuse.glob(pattern):
+                    dst = work / src_file.name
+                    if not dst.exists():
+                        shutil.copyfile(src_file, dst)
+                        log(f"reusing {src_file}")
+    raw = {g: load_group(g) for g in ("pool", "dev", "test")}
+    log(f"loaded {len(raw['pool'])} pool, {len(raw['dev'])} dev, {len(raw['test'])} test worms "
+        f"({raw['pool'][0].n} nuclei each)")
+    trials = tuple(int(v) for v in args.trials.split(","))
+    quadratic = args.mode in ("full", "unlearned_quadratic")
+    ablate = tuple(float(v) for v in args.lambda_scale.split(","))
 
-    learn_subset = train[: args.learn_worms]
-    learned = learn_params(learn_subset, args.trials, args.seed, args.loss, args.sparsity_limit)
-    log("matching all training worms with learned cycle-consistent parameters")
-    pairs = all_pairwise(train, learned, sparse=True, quadratic=True)
-    log("synchronizing pairwise matches into atlas cliques")
-    cliques = synchronize_cliques(train, pairs)
-    clique_labels = induce_clique_labels(cliques, train)
-    atlas = build_atlas(cliques, train, clique_labels)
-    sup_atlas = supervised_atlas(train)
+    # 1-2. Re-alignment target and first (unlearned, dense linear) re-alignment.
+    pre_path = work / "prealign.npz"
+    if pre_path.exists():
+        groups = load_worms(pre_path, raw)
+        target_idx = json.loads(pre_path.with_suffix(".json").read_text())["target"]
+        log("loaded first re-alignment")
+    else:
+        target_idx = star_center(raw["pool"], seed=args.seed)
+        target = raw["pool"][target_idx]
+        log(f"re-alignment target: pool worm {target.worm_id}")
+        others = [(g, w) for g in raw for w in raw[g] if not (g == "pool" and w.worm_id == target.worm_id)]
+        aligned = realign([w for _, w in others], target, gm.WormParams(c0=C0_LEARN), False,
+                          args.realign_iterations, args.seed, "unlearned")
+        groups = {g: [] for g in raw}
+        it = iter(aligned)
+        for g in raw:
+            for w in raw[g]:
+                groups[g].append(w if (g == "pool" and w.worm_id == target.worm_id) else next(it))
+        save_worms(pre_path, groups, {"target": target_idx})
+    target_id = raw["pool"][target_idx].worm_id
 
-    unlearned = Params(cen_cov=(1, 1, 1), rad_cov=(1, 1, 1), off_cov=(1, 1, 1), tau_cen=1e9, tau_rad=1e9)
-    log("building unlearned linear baseline atlas")
-    baseline_pairs = all_pairwise(train, unlearned, sparse=False, quadratic=False)
-    baseline_cliques = synchronize_cliques(train, baseline_pairs)
-    baseline_atlas = build_atlas(
-        baseline_cliques,
-        train,
-        induce_clique_labels(baseline_cliques, train),
-    )
+    # 3. Bayesian optimisation of the cross-nucleus parameters.
+    bo_path = work / "bo.json"
+    learn_worms = groups["pool"][: args.learn_worms]
+    if args.mode == "unlearned_quadratic":
+        reuse_bo = json.loads((reuse / "bo.json").read_text()) if reuse and (reuse / "bo.json").exists() else None
+        params = gm.WormParams(c0=C0_LEARN)
+        if reuse_bo is not None:  # Tab. 1: "as sparse as linear sparse"
+            sparse = gm.WormParams.from_dict(reuse_bo["history"]["stage2"]["params"])
+            params.k_min, params.tau_cen, params.tau_rad = sparse.k_min, sparse.tau_cen, sparse.tau_rad
+        else:
+            params.k_min = 14
+        history = {"unlearned": params.to_dict()}
+    elif bo_path.exists():
+        saved = json.loads(bo_path.read_text())
+        params, history = gm.WormParams.from_dict(saved["params"]), saved["history"]
+        log("loaded learned parameters")
+    else:
+        stages = (1, 2, 3) if args.mode == "full" else (1, 2)
+        params, history = learn_parameters(learn_worms, trials, args.seed, args.max_avg_assignments,
+                                           args.loss_tolerance, stages=stages)
+        history["trials"] = list(trials)
+        bo_path.write_text(json.dumps({"params": params.to_dict(), "history": history}, indent=2))
+    log(f"parameters: {params.to_dict()}")
 
-    log("matching atlases to held-out test worms")
+    # 4. Second re-alignment with the learned model.
+    post_path = work / "postalign.npz"
+    if post_path.exists():
+        groups = load_worms(post_path, groups)
+        log("loaded second re-alignment")
+    elif args.second_realign:
+        target = groups["pool"][target_idx]
+        others = [(g, w) for g in groups for w in groups[g] if not (g == "pool" and w.worm_id == target_id)]
+        aligned = realign([w for _, w in others], target, params, quadratic, args.realign_iterations,
+                          args.seed + 1, "learned")
+        it = iter(aligned)
+        groups = {g: [w if (g == "pool" and w.worm_id == target_id) else next(it) for w in groups[g]]
+                  for g in groups}
+        save_worms(post_path, groups)
+
+    # 5. Multi-graph matching of the pool -> cycle-consistent cliques.
+    mgm_params = copy.deepcopy(params)
+    mgm_params.c0 = C0_MGM
+    mgm_params.w_cen, mgm_params.w_rad, mgm_params.w_off = ablate
+    mgm_path = work / f"mgm_{args.lambda_scale.replace(',', '_')}.json"
+    pool = groups["pool"]
+    sizes = [w.n for w in pool]
+    if mgm_path.exists():
+        membership = [np.asarray(m, dtype=int) for m in json.loads(mgm_path.read_text())["membership"]]
+        log("loaded multi-graph matching")
+    else:
+        t0 = time.time()
+        pre = pairwise_all(pool, mgm_params, quadratic, seed=args.seed + 2)
+        log(f"solved {len(pre)} pairwise pool problems ({time.time() - t0:.0f}s)")
+        sync = gm.synchronize(pre, sizes, iterations=3)
+        membership = gm.cliques_to_membership(sync.cliques(), sizes)
+        mgm_path.write_text(json.dumps({"membership": [m.tolist() for m in membership],
+                                        "sync_objective": float(sync.evaluate())}))
+        log(f"synchronised into {len(sync.cliques())} cliques ({time.time() - t0:.0f}s)")
+
+    # 6. Unsupervised atlas (optionally refined by re-matching the pool to it).
+    weights = atlas_weights(params, ablate)
+    atlas = build_unsupervised_atlas(pool, membership, weights, shrinkage=args.atlas_shrinkage)
+    log(f"atlas: {atlas.size} labels, weights {weights}")
+    for refine in range(args.atlas_refine):
+        labels = annotate(atlas, pool, params, quadratic, seed=args.seed + 10 + refine)
+        membership = [labels[w.worm_id] for w in pool]
+        atlas = build_unsupervised_atlas(pool, membership, weights, shrinkage=args.atlas_shrinkage)
+        log(f"atlas refinement {refine + 1}: {atlas.size} labels")
+
+    # 7. Annotate every held-out worm by worm-to-atlas matching.
+    t0 = time.time()
+    labelings = annotate(atlas, groups["dev"] + groups["test"], params, quadratic, seed=args.seed + 3)
+    log(f"annotated {len(labelings)} held-out worms ({time.time() - t0:.0f}s)")
+
     output = {
-        "metadata": {
-            "train_worms": len(train),
-            "test_worms": len(test),
-            "cells": cell_count,
-            "semantic_labels_used_for_training": False,
-            "optimizer": "optuna_tpe" if optuna is not None else "seeded_random_fallback",
-            "loss": args.loss,
-            "params": asdict(learned),
-        },
-        "experiments": {
-            "scaled_manual_segmentation": {
-                "test_labels": [w.names for w in test],
-                "train_labels": [w.names for w in train],
-                "methods": {
-                    "unlearned_linear_baseline": {
-                        "atlas_labels": baseline_atlas.names,
-                        "test_labelings": match_atlas(baseline_atlas, test, unlearned, quadratic=False),
-                    },
-                    "our_unsupervised_atlas": {
-                        "atlas_labels": atlas.names,
-                        "test_labelings": match_atlas(atlas, test, learned, quadratic=True),
-                        "pre_atlas_accuracies": evaluate_pre_atlas(cliques, clique_labels, train),
-                    },
-                    "supervised_oracle_atlas": {
-                        "atlas_labels": sup_atlas.names,
-                        "test_labelings": match_atlas(sup_atlas, test, learned, quadratic=True),
-                    },
-                },
-            }
+        "format": "cellid-atlas-v1",
+        "pool_cliques": {w.worm_id: m.tolist() for w, m in zip(pool, membership)},
+        "labelings": {k: v.tolist() for k, v in labelings.items()},
+        "info": {
+            "method": "cycle-consistent MGM + BO (synchronisation loss) unsupervised atlas",
+            "mode": args.mode,
+            "seed": args.seed,
+            "learn_worms": args.learn_worms,
+            "trials": list(trials),
+            "params": params.to_dict(),
+            "atlas_weights": list(weights),
+            "atlas_labels": atlas.size,
+            "atlas_shrinkage": args.atlas_shrinkage,
+            "atlas_refine": args.atlas_refine,
+            "realignment_target": target_id,
+            "seconds": time.time() - t_start,
         },
     }
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-    Path(args.output).write_text(json.dumps(output, indent=2))
-    log(f"wrote predictions to {args.output}")
+    Path(args.output).write_text(json.dumps(output))
+    log(f"wrote {args.output} ({time.time() - t_start:.0f}s total)")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--train-dir", default="data/cellmatch_sample/train")
-    parser.add_argument("--test-dir", default="data/cellmatch_sample/test")
-    parser.add_argument("--output", default="outputs/method/predictions.json")
-    parser.add_argument("--train-worms", type=int, default=12)
-    parser.add_argument("--learn-worms", type=int, default=6)
-    parser.add_argument("--test-worms", type=int, default=6)
-    parser.add_argument("--cells", type=int, default=0, help="0 means use all cells; positive values are label-free smoke subsets")
-    parser.add_argument("--trials", type=int, default=6)
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--output", default="outputs/our_unsupervised_atlas/predictions.json")
+    parser.add_argument("--work", default="checkpoints/our_unsupervised_atlas")
+    parser.add_argument("--reuse", default=None, help="work dir whose checkpoints may be reused")
+    parser.add_argument("--reuse-stages", default="prealign,bo",
+                        help="comma list of prealign,bo,postalign,mgm checkpoints to copy from --reuse")
+    parser.add_argument("--mode", choices=["full", "linear", "unlearned_quadratic"], default="full")
     parser.add_argument("--seed", type=int, default=7)
-    parser.add_argument("--loss", choices=["sync", "cycle"], default="sync")
-    parser.add_argument("--sparsity-limit", type=float, default=12000.0)
+    parser.add_argument("--learn-worms", type=int, default=8)
+    parser.add_argument("--trials", default="40,40,12", help="BO trials for stages 1,2,3")
+    parser.add_argument("--max-avg-assignments", type=float, default=12000.0)
+    parser.add_argument("--loss-tolerance", type=float, default=0.0005)
+    parser.add_argument("--lambda-scale", default="1,1,1",
+                        help="multiply (lambda_cen, lambda_rad, lambda_off); App. C ablations")
+    parser.add_argument("--no-second-realign", dest="second_realign", action="store_false")
+    parser.add_argument("--realign-iterations", type=int, default=PAPER_ITERATIONS,
+                        help="re-alignment iterations per round (paper: 7; lower only for smoke tests)")
+    parser.add_argument("--atlas-shrinkage", type=float, default=0.0)
+    parser.add_argument("--atlas-refine", type=int, default=0)
     run(parser.parse_args())
 
 

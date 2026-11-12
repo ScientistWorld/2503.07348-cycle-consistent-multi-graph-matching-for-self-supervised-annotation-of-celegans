@@ -1,190 +1,166 @@
+"""Visible (train-side) scorer for the cell-identity benchmark.
+
+    python eval/train/evaluate_slice.py [--output scoring/scores_train.json]
+
+Scores the dev worms (data/worms/dev) of every method directory under
+outputs/ (each holding predictions.json) plus the fixed comparators in
+eval/train/fixed/. The entry ``our_unsupervised_atlas`` is always emitted; a
+missing, unreadable or invalid artifact scores the worst value of every metric.
+
+Because the pool's names are not available on this side, atlas labels are
+named leave-one-out: to score dev worm d, every atlas label is named by greedy
+maximum voting over the true names of the nuclei it was assigned to in the
+other three dev worms (largest count first, each label and each name used
+once). Atlas accuracy of d = fraction of its nuclei whose label carries their
+true name; unassigned nuclei count as wrong. The hidden test instead names the
+atlas labels from the pool cliques, so a method whose held-out labels are
+consistent with each other but not with its own pool cliques scores higher
+here than on the hidden test. The dev labels are for scoring only: using them to build,
+tune or select a method breaks the benchmark's label-free constraint.
+
+Validity (otherwise the run fails): every pool worm and dev worm present, one
+integer >= -1 per nucleus, no label / clique used twice within a worm.
+"""
 from __future__ import annotations
 
 import argparse
 import json
-import random
+import math
 import sys
+from collections import Counter
 from pathlib import Path
-from typing import Any
 
-import numpy as np
-
-from data.cellmatch_data import limit_cells_by_input_order, load_split
-
-
-SLICE = "train"
-SPLIT_SEED = 250307348
-DEFAULT_TRAIN_DIR = "data/cellmatch_sample/train"
-DEFAULT_TEST_DIR = "data/cellmatch_sample/test"
-DEFAULT_TRAIN_WORMS = 12
-DEFAULT_TEST_WORMS = 6
-DEFAULT_CELLS = 558
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parents[1]
+OUTPUTS = ROOT / "outputs"
+FIXED = HERE / "fixed"
+POOL_DIR = ROOT / "data" / "worms" / "pool"
+EXPERIMENT = "scaled_manual_segmentation"
+CANONICAL = "our_unsupervised_atlas"
+ORACLE = "supervised_oracle_atlas"
+WORST = {"atlas_accuracy_mean": 0.0, "atlas_accuracy_min": 0.0, "atlas_accuracy_std": 0.5}
+MAX_BYTES = 50_000_000
 
 
-def split_indices(count: int) -> list[int]:
-    if count <= 1:
-        return list(range(count))
-    order = list(range(count))
-    random.Random(SPLIT_SEED).shuffle(order)
-    midpoint = max(1, count // 2)
-    return sorted(order[:midpoint])
+def pool_sizes() -> dict:
+    return {p.stem: sum(1 for line in p.read_text().splitlines() if line.strip())
+            for p in sorted(POOL_DIR.glob("*.txt"))}
 
 
-def worm_accuracy(atlas_labels: list[str], labels: list[str], labeling: list[Any]) -> float:
-    correct = 0
-    total = 0
-    for atlas_idx, target_idx in enumerate(labeling):
-        total += 1
-        if target_idx is None:
-            continue
-        if not isinstance(target_idx, int):
-            continue
-        if target_idx < 0 or target_idx >= len(labels):
-            continue
-        if atlas_idx < len(atlas_labels) and atlas_labels[atlas_idx] == labels[target_idx]:
-            correct += 1
-    return correct / total if total else 0.0
+def validate(values, n: int, where: str) -> list[int]:
+    if not isinstance(values, list):
+        raise ValueError(f"{where}: expected a list of {n} integers")
+    if len(values) != n:
+        raise ValueError(f"{where}: expected {n} entries, got {len(values)}")
+    seen = set()
+    for v in values:
+        if isinstance(v, bool) or not isinstance(v, int) or v < -1:
+            raise ValueError(f"{where}: entries must be integers >= -1 (got {v!r})")
+        if v >= 0:
+            if v in seen:
+                raise ValueError(f"{where}: label {v} used for more than one nucleus")
+            seen.add(v)
+    return values
 
 
-def invalid_assignment_rate(labels: list[str], labeling: list[Any]) -> float:
-    total = len(labeling)
-    if total == 0:
-        return 1.0
-    invalid = 0
-    for target_idx in labeling:
-        if target_idx is None or not isinstance(target_idx, int) or target_idx < 0 or target_idx >= len(labels):
-            invalid += 1
-    return invalid / total
+def greedy_names(labels: dict, dev: dict) -> dict:
+    """Name atlas labels by greedy maximum voting over the given dev worms."""
+    votes: Counter = Counter()
+    for w, lab in labels.items():
+        for node, k in enumerate(lab):
+            if k >= 0:
+                votes[(k, dev[w][node])] += 1
+    names: dict = {}
+    used: set = set()
+    for (k, name), _ in sorted(votes.items(), key=lambda kv: (-kv[1], kv[0][0], kv[0][1])):
+        if k not in names and name not in used:
+            names[k] = name
+            used.add(name)
+    return names
 
 
-def score_method(method: dict[str, Any], test_labels: list[list[str]], indices: list[int]) -> dict[str, float]:
-    atlas_labels = method["atlas_labels"]
-    labelings = method["test_labelings"]
-    accuracies = [
-        worm_accuracy(atlas_labels, test_labels[idx], labelings[idx])
-        for idx in indices
-    ]
-    invalid_rates = [
-        invalid_assignment_rate(test_labels[idx], labelings[idx])
-        for idx in indices
-    ]
-    result = {
-        "atlas_accuracy_mean": float(np.mean(accuracies)),
-        "atlas_accuracy_min": float(np.min(accuracies)),
-        "atlas_accuracy_std": float(np.std(accuracies)),
-        "invalid_assignment_rate": float(np.mean(invalid_rates)),
-    }
-    if "pre_atlas_accuracies" in method:
-        vals = method["pre_atlas_accuracies"]
-        result["pre_atlas_accuracy_mean"] = float(np.mean(vals))
-        result["pre_atlas_accuracy_std"] = float(np.std(vals))
-        result["atlas_minus_preatlas"] = result["atlas_accuracy_mean"] - result["pre_atlas_accuracy_mean"]
-    return result
-
-
-def validate_experiment(exp_name: str, exp: dict[str, Any], expected_labelings: int) -> None:
-    methods = exp.get("methods")
-    if not isinstance(methods, dict) or not methods:
-        raise ValueError(f"{exp_name}: predictions must contain at least one method")
-    for method_name, method in methods.items():
-        labelings = method.get("test_labelings")
-        if not isinstance(labelings, list):
-            raise ValueError(f"{exp_name}.{method_name}: missing test_labelings list")
-        if len(labelings) != expected_labelings:
-            raise ValueError(
-                f"{exp_name}.{method_name}: {len(labelings)} test_labelings for "
-                f"{expected_labelings} evaluator-loaded label sets"
-            )
-        if "atlas_labels" not in method:
-            raise ValueError(f"{exp_name}.{method_name}: missing atlas_labels")
-
-
-def load_ground_truth_labels(metadata: dict[str, Any]) -> list[list[str]]:
-    expected = {
-        "train_worms": DEFAULT_TRAIN_WORMS,
-        "test_worms": DEFAULT_TEST_WORMS,
-        "cells": DEFAULT_CELLS,
-    }
-    for key, value in expected.items():
-        if key in metadata and int(metadata[key]) != value:
-            raise ValueError(
-                f"metadata {key}={metadata[key]} does not match fixed evaluation value {value}"
-            )
-    train = load_split(DEFAULT_TRAIN_DIR, DEFAULT_TRAIN_WORMS)
-    test = load_split(DEFAULT_TEST_DIR, DEFAULT_TEST_WORMS)
-    test = limit_cells_by_input_order(test, DEFAULT_CELLS)
-    return [worm.names for worm in test]
-
-
-def validate_ground_truth(exp_name: str, exp: dict[str, Any], truth: list[list[str]]) -> None:
-    artifact_labels = exp.get("test_labels")
-    if artifact_labels is not None and artifact_labels != truth:
-        raise ValueError(
-            f"{exp_name}: artifact test_labels do not match evaluator-loaded ground truth"
-        )
-
-
-def add_cross_method_constraints(methods: dict[str, dict[str, float]], metadata: dict[str, Any]) -> None:
-    oracle = methods.get("supervised_oracle_atlas")
-    if oracle is not None:
-        oracle_acc = oracle.get("atlas_accuracy_mean")
-        if oracle_acc is not None:
-            for method_name, method_scores in methods.items():
-                if method_name == "supervised_oracle_atlas":
-                    continue
-                if "atlas_accuracy_mean" in method_scores:
-                    method_scores["gap_to_supervised_oracle"] = float(
-                        oracle_acc - method_scores["atlas_accuracy_mean"]
-                    )
-    if "our_unsupervised_atlas" in methods:
-        methods["our_unsupervised_atlas"]["semantic_labels_used_for_training"] = float(
-            metadata.get("semantic_labels_used_for_training", True)
-        )
+def dev_scores(pred, dev: dict, sizes: dict | None) -> tuple[dict, dict]:
+    if not isinstance(pred, dict) or not isinstance(pred.get("labelings"), dict):
+        raise ValueError("predictions need a 'labelings' object")
+    if sizes is not None:
+        cliques = pred.get("pool_cliques")
+        if not isinstance(cliques, dict):
+            raise ValueError("predictions need a 'pool_cliques' object")
+        for wid, n in sizes.items():
+            validate(cliques.get(wid), n, f"pool_cliques[{wid}]")
+    labels = {w: validate(pred["labelings"].get(w), len(t), f"labelings[{w}]") for w, t in dev.items()}
+    acc = {}
+    for scored in sorted(labels):
+        names = greedy_names({w: lab for w, lab in labels.items() if w != scored}, dev)
+        lab = labels[scored]
+        acc[scored] = sum(1 for node, k in enumerate(lab) if k >= 0 and names.get(k) == dev[scored][node]) / len(lab)
+    values = list(acc.values())
+    mean = sum(values) / len(values)
+    return {
+        "atlas_accuracy_mean": mean,
+        "atlas_accuracy_min": min(values),
+        "atlas_accuracy_std": math.sqrt(sum((v - mean) ** 2 for v in values) / len(values)),
+    }, acc
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("predictions", nargs="?", default="outputs/method/predictions.json")
-    parser.add_argument("--output", default="scoring/scores_train.json")
+    parser.add_argument("--output", default=str(ROOT / "scoring" / "scores_train.json"))
     args = parser.parse_args()
+    dev = json.loads((HERE / "dev_labels.json").read_text())["dev"]
+    sizes = pool_sizes()
+    fixed = {p.stem: p for p in sorted(FIXED.glob("*.json"))}
+    submitted = {}
+    if OUTPUTS.is_dir():
+        for d in sorted(OUTPUTS.iterdir()):
+            if d.is_dir() and not d.name.startswith(("_", ".")):
+                submitted[d.name] = d / "predictions.json"
+    submitted.setdefault(CANONICAL, OUTPUTS / CANONICAL / "predictions.json")
 
-    predictions_path = Path(args.predictions)
-    pred = json.loads(predictions_path.read_text())
-    metadata = pred.get("metadata", {})
-    ground_truth_labels = load_ground_truth_labels(metadata)
-    out: dict[str, Any] = {
+    results, per_worm, failures = {}, {}, {}
+    entries = [(n, p, None) for n, p in fixed.items()]
+    entries += [(n, p, sizes) for n, p in submitted.items() if n not in fixed]
+    for name, path, check_sizes in entries:
+        try:
+            if not path.is_file():
+                raise ValueError(f"{path.relative_to(ROOT)} not found")
+            if path.stat().st_size > MAX_BYTES:
+                raise ValueError("predictions file too large")
+            metrics, acc = dev_scores(json.loads(path.read_text()), dev, check_sizes)
+            per_worm[name] = acc
+        except Exception as exc:
+            metrics = dict(WORST)
+            failures[name] = f"{type(exc).__name__}: {exc}"
+        results[name] = metrics
+    if ORACLE not in results or ORACLE in failures:
+        raise SystemExit("fixed supervised comparator missing or invalid: eval/train/fixed is incomplete")
+    oracle_mean = results[ORACLE]["atlas_accuracy_mean"]
+    for name, metrics in results.items():
+        if name != ORACLE:
+            metrics["gap_to_supervised_oracle"] = oracle_mean - metrics["atlas_accuracy_mean"]
+    out = {
         "_metadata": {
-            "slice": SLICE,
-            "split_seed": SPLIT_SEED,
-            "source_predictions": str(predictions_path),
+            "slice": "train",
+            "target_worms": sorted(dev),
+            "naming": "leave-one-out greedy maximum voting over the other dev worms",
+            "fixed_comparators": sorted(fixed),
+            "submitted_methods": sorted(n for n in submitted if n not in fixed),
+            "failures": failures,
+            "per_worm_accuracy": per_worm,
         },
-        "experiments": {},
+        "experiments": {EXPERIMENT: {"results": results}},
     }
-
-    for exp_name, exp in pred["experiments"].items():
-        validate_ground_truth(exp_name, exp, ground_truth_labels)
-        validate_experiment(exp_name, exp, len(ground_truth_labels))
-        indices = split_indices(len(ground_truth_labels))
-        methods = {
-            name: score_method(method, ground_truth_labels, indices)
-            for name, method in exp["methods"].items()
-        }
-        add_cross_method_constraints(methods, metadata)
-        out["experiments"][exp_name] = {
-            "_slice": SLICE,
-            "_target_indices": indices,
-            "results": methods,
-        }
-
-    output_path = Path(args.output)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(out, indent=2))
-    print(json.dumps(out, indent=2))
+    output = Path(args.output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(out, indent=2))
+    print(json.dumps({"failures": failures, "results": results}, indent=2))
 
 
 if __name__ == "__main__":
     try:
         main()
+    except SystemExit:
+        raise
     except Exception as exc:
-        print(f"eval/{SLICE}: {exc}", file=sys.stderr)
+        print(f"eval/train: {exc}", file=sys.stderr)
         raise

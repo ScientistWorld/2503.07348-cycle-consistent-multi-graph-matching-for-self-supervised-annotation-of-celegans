@@ -68,7 +68,11 @@ docker_*.tar.xz
 # Swarm/worker artifacts
 trajectory/
 .empty_*/
-outputs/
+outputs/*
+!outputs/our_unsupervised_atlas/
+outputs/our_unsupervised_atlas/*
+!outputs/our_unsupervised_atlas/predictions.json
+hardening/runs/*/work/
 logs/
 jobs/
 .venv/

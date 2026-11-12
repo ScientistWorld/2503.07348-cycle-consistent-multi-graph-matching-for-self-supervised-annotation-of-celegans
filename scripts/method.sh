@@ -1,26 +1,12 @@
 #!/bin/bash
-# Run the paper's proposed method.
+# Run the reproduced method (paper's unsupervised cycle-consistent MGM atlas)
+# and score it on the visible slice.
 #
-# This script trains/runs the paper's method using code in method/.
-#
-# Usage:
-#   bash scripts/method.sh
-
+# Usage: bash scripts/method.sh [extra args for method/cycle_mgm.py]
+# Defaults: seed 7, 8 learning worms, 40/40/12 BO trials, output
+# outputs/our_unsupervised_atlas/predictions.json (single CPU: ~1 hour).
 set -e
-
 cd /home/user
-
-mkdir -p outputs/method
-
-OUTPUT="outputs/method/predictions.json"
-prev=""
-for arg in "$@"; do
-  if [ "$prev" = "--output" ]; then
-    OUTPUT="$arg"
-    break
-  fi
-  prev="$arg"
-done
-
+export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
 python -m method.cycle_mgm "$@"
-bash scripts/evaluate.sh "$OUTPUT"
+bash scripts/evaluate_train.sh

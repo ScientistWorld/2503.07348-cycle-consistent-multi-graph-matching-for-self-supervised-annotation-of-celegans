@@ -1,28 +1,21 @@
 #!/bin/bash
-# Reproduce the paper's results end-to-end.
-#
-# This script runs inside the compute container and should call
-# scripts/baseline.sh and scripts/method.sh to run baselines and
-# the paper's method, each of which calls scripts/evaluate.sh.
-#
-# Assumes:
-#   - Container is built (environment/container.sif)
-#   - Data and models are downloaded (via scripts/download.sh)
-#   - Working directory is /home/user
-#
-# This is the "gold standard" reproduction — 
-# You do not need to run this, but keep this in good shape
-# so other agents can easily run a full loop of reproduction and get the paper's numbers.
-
+# Reproduce the gym's reference end to end (single CPU, ~1.5 hours):
+#   1. the paper's method (seed 7) -> outputs/our_unsupervised_atlas/predictions.json
+#   2. the unlearned linear baseline and, when the hidden side is present, the
+#      supervised comparator; both are frozen into eval/{train,test}/fixed/
+#   3. visible and hidden scoring.
 set -e
-
 cd /home/user
-
-bash scripts/method.sh \
-  --output outputs/method/predictions.json \
-  --train-worms 12 \
-  --learn-worms 6 \
-  --test-worms 6 \
-  --cells 0 \
-  --trials 6 \
-  --seed 7
+export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUNBUFFERED=1
+python -m method.cycle_mgm --seed 7 --work checkpoints/our_unsupervised_atlas \
+  --output outputs/our_unsupervised_atlas/predictions.json
+python -m baseline.unlearned_linear --reuse checkpoints/our_unsupervised_atlas \
+  --output outputs/_comparators/unlearned_linear_baseline/predictions.json
+if [ -f eval/test/keys.json ]; then
+  python -m eval.test.supervised_oracle --output outputs/_comparators/supervised_oracle_atlas/predictions.json
+  python eval/test/install_comparator.py unlearned_linear_baseline outputs/_comparators/unlearned_linear_baseline/predictions.json
+  python eval/test/install_comparator.py supervised_oracle_atlas outputs/_comparators/supervised_oracle_atlas/predictions.json
+  bash scripts/evaluate_test.sh
+fi
+bash scripts/evaluate_train.sh
+bash scripts/evaluate.sh

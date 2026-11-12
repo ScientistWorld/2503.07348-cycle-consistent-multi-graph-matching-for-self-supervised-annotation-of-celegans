@@ -1,22 +1,10 @@
 #!/bin/bash
-# Run a baseline method from the paper.
+# Run the unlearned linear baseline. Its predictions are written under
+# outputs/_comparators/ (ignored by the evaluators); the gym's scored copy is the
+# fixed comparator frozen in eval/{train,test}/fixed/unlearned_linear_baseline.json.
 #
-# Baselines are simple reference methods the paper compares against. 
-# Implement this only if applicable, i.e. the paper has baselines.
-# You do not need to implement all baselines to begin — 
-# just enough to validate that the evaluation pipeline works 
-# and provide a reference point. You can decide to expand more baselines later.
-# Each baseline must be actually run and scored through evaluate.sh
-# so the numbers are verified, not self-reported.
-# You can decide what this baseline script should do yourself.
-#
-# Usage:
-#   bash scripts/baseline.sh <name>
-
+# Usage: bash scripts/baseline.sh [--reuse checkpoints/our_unsupervised_atlas]
 set -e
-
 cd /home/user
-
-mkdir -p outputs/baseline
-python -m baseline.unlearned_linear --output outputs/baseline/predictions.json
-bash scripts/evaluate.sh outputs/baseline/predictions.json
+export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
+python -m baseline.unlearned_linear "$@"

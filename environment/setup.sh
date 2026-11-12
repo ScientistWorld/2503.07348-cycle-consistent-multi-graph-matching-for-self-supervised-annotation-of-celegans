@@ -16,4 +16,4 @@
 
 set -e
 
-uv pip install --system numpy scipy optuna
+uv pip install --system numpy scipy optuna "pylibmgm==1.1.3"
