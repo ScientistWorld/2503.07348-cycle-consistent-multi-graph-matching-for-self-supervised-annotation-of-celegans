@@ -4,6 +4,10 @@
 
 ## Progress Log
 
+### [2026-11-12] - core_claim (hardening, final iteration)
+- Reference rebuilt as the paper's own pipeline on the authors' solver library (pylibmgm): realignment before/after BO, 3-stage BO with the synchronisation loss, Fusion Moves GM, dense GREEDA synchronisation, nucleus-specific Gaussian atlas. Hidden test (10 worms): 0.892 vs frozen supervised comparator 0.917 and unlearned baseline 0.798; seed range 0.38 points.
+- Labels and hidden test inputs removed from every visible file; submissions ship a per-worm annotator; failures score worst values. Atlas covariance shrinkage beats the reference by +4.9 to +5.9 points on every seed. See HARDENING.md.
+
 ### [2026-06-02 23:19] - core_claim
 - CPU job `18a6816a-348` completed the stricter all-558-cell default reproduction and `python validate.py --compare` passed.
 - The unsupervised atlas reached 0.7386 +/- 0.1259 held-out atlas accuracy, beating the unlearned linear baseline at 0.6941 +/- 0.1150 while using no semantic labels for training.

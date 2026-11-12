@@ -1,8 +1,9 @@
 # Experiment Overview
 
 ## scaled_manual_segmentation
-This experiment tests the central identity-assignment task on a tracked public sample of preprocessed C. elegans worms. It measures whether a reference built from training worms can assign correct biological identities to cells in held-out worms, and whether a label-free result remains close to a supervised oracle under the same data and evaluation rules.
+Establishes whether a reference of cell identities built from unlabeled, manually segmented C. elegans worms can annotate new worms accurately — the paper's claim that a label-free reference approaches a supervised one.
 
-The current default benchmark uses 12 training worms, 6 held-out worms, and all 558 cells in each worm. Smaller diagnostic scripts are retained for future agents that need fast smoke checks before running the default setting; those positive `--cells` settings are label-free input-order subsets and should not be reported as the formal default benchmark.
-
-An expanded probe is available through `scripts/expanded_core.sh` with 16 training worms, 6 held-out worms, and 220 cells. It writes to `outputs/expanded/` rather than `scoring/scores.json`, because the formal default benchmark remains the comparable `scripts/reproduce.sh` setting.
+- Data: 26 real worms from the public Li et al. (2024) manual segmentations (558 nuclei each): 12 unlabeled pool worms to build the reference, 4 visible dev worms, 10 hidden test worms whose inputs and labels never leave the hidden evaluator.
+- Measurement: held-out worms are annotated one at a time by the submission's own annotator; accuracy is the fraction of nuclei given their true identity (mean over worms, and worst worm). Identities are named from the pool on the hidden side and leave-one-out across the dev worms on the visible side, where only 10 % of identities are labeled; the visible score is noisier and runs a few points below the hidden one.
+- Comparison points: a frozen supervised comparator (same data, uses all pool names: 0.917 hidden) and a frozen unlearned label-free baseline (0.798). The scaled reproduction of the paper's method scores 0.892 (seed spread 0.4 points); the gap to the supervised comparator is the quantity the paper reports as 0.003 at 100 training worms.
+- Scale: 12 instead of 100 reference worms and 10 instead of 100 test worms; the paper reports that accuracy grows with the number of reference worms.

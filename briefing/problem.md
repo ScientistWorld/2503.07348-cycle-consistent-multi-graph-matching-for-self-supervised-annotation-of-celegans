@@ -2,12 +2,18 @@
 
 ## Research Question
 
-How can cell nuclei in 3D C. elegans microscopy images be assigned consistent biological identities across animals when manual semantic annotations are scarce or unavailable?
+How can the nuclei of a 3D C. elegans microscopy image be assigned their biological identities (one of 558 unique cell names) when no semantic annotation is available to build the identity reference?
 
 ## Why It Matters
 
-Cell-level identity maps let biologists compare gene expression and morphology across individual worms in a common reference frame. Manual annotation is slow and expert-dependent, so a good automatic solution removes a major bottleneck for high-throughput organism-scale studies.
+Cell-level identity maps let biologists compare gene expression and morphology across individual worms in a common reference frame. Expert annotation of every nucleus is slow and error-prone; a label-free way to obtain the identity reference removes a key bottleneck for organism-scale studies.
+
+## Setting
+
+- Every worm is given as a table of segmented nuclei (centroid and three ellipsoid radii, already rigidly aligned along the body axes). Row order carries no identity information.
+- 12 unlabeled pool worms are available to build an identity reference. No semantic name of any pool nucleus is available, and none may be obtained from outside the benchmark.
+- New worms must then be annotated one at a time by the system's own procedure: every nucleus receives a reference identity (or none), with no two nuclei of a worm sharing an identity.
 
 ## Success Criteria
 
-A successful system builds a reusable identity reference from segmented nuclei, assigns identities to held-out worms with high per-cell accuracy, remains close to an otherwise comparable supervised reference in accuracy, and does not use held-out labels during training or model selection.
+High per-nucleus identity accuracy on held-out worms, on every worm rather than only on average, achieved without semantic labels.

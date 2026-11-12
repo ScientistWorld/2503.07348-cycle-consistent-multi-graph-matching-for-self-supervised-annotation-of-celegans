@@ -4,7 +4,7 @@
       "description": "Label-free C. elegans cell-identity annotation from manually segmented nuclei. An identity reference is built from 12 unlabeled pool worms; held-out worms (10 hidden test worms, 4 visible dev worms) are annotated with it, and every nucleus' assigned identity is checked against its biological name (558 nuclei per worm). Scaled from the paper's 100 training / 100 test worms: the paper numbers below are its full-scale results and are not expected at this scale.",
       "weight": 1.0,
       "primary_metric": "atlas_accuracy_mean",
-      "_scale_note": "Paper: 100 training worms (15 for parameter learning, 500 BO trials per stage), 100 test worms. Gym: 12 pool worms (6 for parameter learning, 30/30/10 BO trials), 10 hidden test worms, same 558-nucleus manual segmentations of the Li et al. dataset. Accuracy grows with the number of training worms (paper Fig. 5), so the gym reference sits below 0.961.",
+      "_scale_note": "Paper: 100 training worms (15 for parameter learning, 500 BO trials per stage), 100 test worms. Gym: 12 pool worms (6 for parameter learning, 30/30/10 BO trials), 10 hidden test worms annotated one at a time by the submission's annotate.sh, 4 visible dev worms (10 % of identities labeled); same 558-nucleus manual segmentations of the Li et al. dataset. Accuracy grows with the number of training worms (paper Fig. 5), so the gym reference (0.892) sits below 0.961.",
       "metrics": {
         "atlas_accuracy_mean": {
           "higher_is_better": true,
@@ -39,7 +39,7 @@
         "our_unsupervised_atlas": {
           "type": "proposed",
           "atlas_accuracy_mean": 0.961,
-          "atlas_accuracy_std": 0.020,
+          "atlas_accuracy_std": 0.02,
           "pre_atlas_accuracy_mean": 0.966,
           "gap_to_supervised_oracle": 0.003
         },
@@ -51,28 +51,77 @@
       },
       "_paper_reported": {
         "table3_test_set_100_100": {
-          "supervised_atlas_li_et_al_2024": {"atlas_accuracy_mean": 0.93, "atlas_accuracy_std": 0.11},
-          "our_supervised_atlas": {"atlas_accuracy_mean": 0.964, "atlas_accuracy_std": 0.019},
-          "our_unsupervised_atlas": {"atlas_accuracy_mean": 0.961, "atlas_accuracy_std": 0.020}
+          "supervised_atlas_li_et_al_2024": {
+            "atlas_accuracy_mean": 0.93,
+            "atlas_accuracy_std": 0.11
+          },
+          "our_supervised_atlas": {
+            "atlas_accuracy_mean": 0.964,
+            "atlas_accuracy_std": 0.019
+          },
+          "our_unsupervised_atlas": {
+            "atlas_accuracy_mean": 0.961,
+            "atlas_accuracy_std": 0.02
+          }
         },
         "table1_training_set_ablations": {
-          "linear_dense_learned": {"pre_atlas_accuracy_mean": 0.949, "atlas_accuracy_mean": 0.955, "atlas_accuracy_std": 0.031},
-          "linear_sparse_learned": {"pre_atlas_accuracy_mean": 0.949, "atlas_accuracy_mean": 0.956, "atlas_accuracy_std": 0.030},
-          "unlearned_quadratic": {"pre_atlas_accuracy_mean": 0.944, "atlas_accuracy_mean": 0.964, "atlas_accuracy_std": 0.018},
-          "full_pipeline": {"pre_atlas_accuracy_mean": 0.966, "atlas_accuracy_mean": 0.972, "atlas_accuracy_std": 0.015}
+          "linear_dense_learned": {
+            "pre_atlas_accuracy_mean": 0.949,
+            "atlas_accuracy_mean": 0.955,
+            "atlas_accuracy_std": 0.031
+          },
+          "linear_sparse_learned": {
+            "pre_atlas_accuracy_mean": 0.949,
+            "atlas_accuracy_mean": 0.956,
+            "atlas_accuracy_std": 0.03
+          },
+          "unlearned_quadratic": {
+            "pre_atlas_accuracy_mean": 0.944,
+            "atlas_accuracy_mean": 0.964,
+            "atlas_accuracy_std": 0.018
+          },
+          "full_pipeline": {
+            "pre_atlas_accuracy_mean": 0.966,
+            "atlas_accuracy_mean": 0.972,
+            "atlas_accuracy_std": 0.015
+          }
         },
         "table2_loss_functions": {
-          "discrete_cycle_loss": {"pre_atlas_accuracy_mean": 0.965, "atlas_accuracy_mean": 0.970},
-          "synchronization_loss": {"pre_atlas_accuracy_mean": 0.966, "atlas_accuracy_mean": 0.972}
+          "discrete_cycle_loss": {
+            "pre_atlas_accuracy_mean": 0.965,
+            "atlas_accuracy_mean": 0.97
+          },
+          "synchronization_loss": {
+            "pre_atlas_accuracy_mean": 0.966,
+            "atlas_accuracy_mean": 0.972
+          }
         },
         "tableC1_cost_term_ablations": {
-          "centroid_only": {"pre_atlas_accuracy_mean": 0.953, "atlas_accuracy_mean": 0.960},
-          "radii_only": {"pre_atlas_accuracy_mean": 0.260, "atlas_accuracy_mean": 0.060},
-          "no_offset": {"pre_atlas_accuracy_mean": 0.953, "atlas_accuracy_mean": 0.960},
-          "offset_only": {"pre_atlas_accuracy_mean": 0.967, "atlas_accuracy_mean": 0.958},
-          "single_realignment": {"pre_atlas_accuracy_mean": 0.963, "atlas_accuracy_mean": 0.971}
+          "centroid_only": {
+            "pre_atlas_accuracy_mean": 0.953,
+            "atlas_accuracy_mean": 0.96
+          },
+          "radii_only": {
+            "pre_atlas_accuracy_mean": 0.26,
+            "atlas_accuracy_mean": 0.06
+          },
+          "no_offset": {
+            "pre_atlas_accuracy_mean": 0.953,
+            "atlas_accuracy_mean": 0.96
+          },
+          "offset_only": {
+            "pre_atlas_accuracy_mean": 0.967,
+            "atlas_accuracy_mean": 0.958
+          },
+          "single_realignment": {
+            "pre_atlas_accuracy_mean": 0.963,
+            "atlas_accuracy_mean": 0.971
+          }
         },
-        "stardist_segmentation": {"supervised_atlas_accuracy_mean": 0.916, "unsupervised_atlas_accuracy_mean": 0.829}
+        "stardist_segmentation": {
+          "supervised_atlas_accuracy_mean": 0.916,
+          "unsupervised_atlas_accuracy_mean": 0.829
+        }
       }
     }
   }

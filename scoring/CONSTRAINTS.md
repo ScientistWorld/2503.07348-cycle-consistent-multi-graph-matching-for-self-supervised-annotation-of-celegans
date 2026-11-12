@@ -1,20 +1,22 @@
 # Scientist Constraints
 
 ## Data
-Use only the tracked preprocessed sample in `data/cellmatch_sample` for the default benchmark: train worms from `data/cellmatch_sample/train` and test worms from `data/cellmatch_sample/test`. Do not add external labeled worms, raw image measurements, or alternative splits when reporting `scaled_manual_segmentation`, because the benchmark is intended to measure methodology rather than extra data.
+Use only what the benchmark ships: the 12 pool worms (`data/worms/pool`) to build the identity reference and the 4 dev worms (`data/worms/dev`) for development. Do not bring in other worms, raw images, external annotations or atlases — in particular not the public Li et al. / cellmatch files these worms come from, which carry their names.
 
 ## Labels
-Semantic cell names in the training files may not be used to construct the unsupervised atlas, tune matching parameters, choose correspondences, or select checkpoints. They may be used only by `eval/` to score artifacts and by the supervised oracle baseline reported separately.
+No semantic name of any nucleus may be used to build, train, tune, select or post-process the system. The only names a submission can read are the dev labels in `eval/train/dev_labels.json` (a fixed 10 % sample of identities); they exist so `scripts/evaluate_train.sh` can score, and may be used only to compare finished systems, never as a training or calibration signal inside the system.
+
+## Annotation
+Every held-out worm is annotated by `annotate.sh`, one worm per call, from that worm's table and the system's own trained files. An annotator must not read evaluator files (`eval/`), must not carry information between calls (e.g. caching earlier held-out worms) and must finish within 900 s per worm on one CPU.
 
 ## Evaluation
-Report scores through `scripts/evaluate.sh` using prediction artifacts written by the submitted system. Do not edit `eval/` to import solution internals or recompute correspondences during scoring.
+Scores come only from `scripts/evaluate_train.sh` / `scripts/evaluate_test.sh` (no arguments). Do not edit `eval/` or the frozen comparators.
 
 ## Scale
-For comparable default scores, keep the `scripts/reproduce.sh` default subset sizes unless a separate experiment name is introduced. The formal default uses all 558 cells in each selected worm. Increasing the number of worms or optimization trials is a scale change and must not be presented as a direct improvement on `scaled_manual_segmentation`; reducing cells with `--cells > 0` is a smoke diagnostic, not the formal benchmark.
+The pool size (12 worms) and the held-out sets are fixed. Training compute is free, but it must stay a property of the submitted system (the reference uses 6 learning worms and 30/30/10 optimisation trials, about 40 minutes on one CPU).
 
 ## Compliance Checklist
-- [ ] Used only `data/cellmatch_sample` for `scaled_manual_segmentation`
-- [ ] Did not use training semantic names inside the unsupervised method
-- [ ] Test labels were used only by `eval/`
-- [ ] Scores were produced by `scripts/evaluate.sh`
-- [ ] Default subset sizes were not changed for direct comparison
+- [ ] Reference built only from `data/worms/pool` (dev worms used only for evaluation)
+- [ ] No semantic names used inside the system; dev labels used only to compare finished systems
+- [ ] `annotate.sh` annotates each worm independently, reads no `eval/` files, keeps no state across calls
+- [ ] Scores produced by the two no-argument evaluation scripts

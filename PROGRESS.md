@@ -1,3 +1,5 @@
+> **2026-11-12 hardening:** the gym was rebuilt (anonymized data, hidden test inputs, per-worm annotator interface, pylibmgm-based paper pipeline). Sections below describe the earlier iterations; HARDENING.md describes the final gym.
+
 # Progress
 
 ## What Works

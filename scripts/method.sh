@@ -1,10 +1,11 @@
 #!/bin/bash
 # Run the reproduced method (paper's unsupervised cycle-consistent MGM atlas)
-# and score it on the visible slice.
+# and score it on the visible slice. Writes predictions.json, model.json and
+# annotate.sh into the --output directory.
 #
 # Usage: bash scripts/method.sh [extra args for method/cycle_mgm.py]
 # Defaults: seed 7, 6 learning worms, 30/30/10 BO trials, output
-# outputs/our_unsupervised_atlas/predictions.json (single CPU: ~1 hour).
+# outputs/our_unsupervised_atlas/predictions.json (single CPU: ~40 minutes).
 set -e
 cd /home/user
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1

@@ -14,3 +14,7 @@ The task is to assign consistent biological names to hundreds of nuclei in 3D wo
 - Main manual-segmentation result: unsupervised atlas 0.961 +/- 0.020 vs supervised atlas 0.964 +/- 0.019.
 - Pipeline ablation: full pipeline atlas accuracy 0.972 +/- 0.015 on training-set ablations vs 0.955 +/- 0.031 for linear dense.
 - Robustness result with automatic StarDist segmentations: full unsupervised pipeline 0.809 +/- 0.147 atlas accuracy.
+
+## This gym
+
+12 unlabeled pool worms, 4 visible dev worms (10 % of identities labeled), 10 hidden test worms from the public Li et al. manual segmentations. Reference (paper's method, scaled): 0.892 hidden-test accuracy; frozen supervised comparator 0.917; unlearned baseline 0.798.

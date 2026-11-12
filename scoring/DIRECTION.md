@@ -1,13 +1,13 @@
 # Research Direction
 
 ## Research Problem
-This benchmark is about unsupervised semantic identity assignment for stereotyped biological structures. The goal is to build an atlas from segmented C. elegans nuclei and use it to annotate held-out worms without relying on manual semantic labels during atlas construction.
+Label-free identity assignment for a stereotyped organism: build a reference of the 558 C. elegans nuclei from unlabeled segmented worms and use it to annotate new worms nucleus by nucleus.
 
 ## Research Scope
-Improvements should remain within unsupervised or weakly supervised identity-reference construction for segmented worm nuclei. Work should still produce identity assignments for the same cell-identity task, rather than changing the biological input, adding extra labeled data, or redefining the target labels.
+Improvements must keep the setting label-free and the output an identity assignment for the same nuclei: better correspondence finding across the pool, better reference statistics from few worms, better alignment of new worms, better matching of a new worm to the reference, uncertainty handling, or learning signals that need no names.
 
 ## Approach Scope
-A scientist may modify the representation, correspondence model, optimization strategy, reference-estimation procedure, or uncertainty handling, provided the output remains a reusable cell-identity assignment system for the same segmented nuclei problem.
+Any representation, objective, optimiser, solver or estimation procedure is allowed, as long as the reference is learned from the pool worms alone and each new worm is annotated independently by the submitted annotator.
 
 ## Out of Bounds
-Using semantic labels to train the unsupervised atlas is out of bounds. Replacing the problem with a supervised classifier, a memorized label lookup, or a model trained end-to-end on ground-truth identities sidesteps the paper's claim. Switching to extra biological measurements or external labeled worms for the default benchmark is also out of bounds.
+Using semantic names (beyond scoring with the visible dev labels), external labeled worms or atlases, the public source files of these worms, held-out worms as training data, or annotators that read evaluator files or share state across calls.

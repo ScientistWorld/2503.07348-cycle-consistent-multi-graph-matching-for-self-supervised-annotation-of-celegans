@@ -20,35 +20,40 @@ run() {  # run <name> <timeout> <cmd...>; skipped when hardening/runs/<name>/ann
 }
 out() { echo "--output hardening/runs/$1/predictions.json"; }
 
-# Stage A: final reference (fresh training, seed 7), comparators, and methods
-# rebuilt from the previous run's pool-side checkpoints (pool-side code unchanged).
+# Stage A: reference seeds (seed 7 = the gym's reference) and the comparators.
 run reference_seed7 12000 env GYM_WORKERS=4 $M --seed 7 --work checkpoints/ref7_final $REF $(out reference_seed7) &
+for s in 8 9; do
+  run reference_seed$s 12000 nice -n 10 env GYM_WORKERS=2 $M --seed $s --work checkpoints/ref_seed$s $REF \
+    $(out reference_seed$s) &
+done
 if [ ! -f eval/test/oracle/predictions.json ]; then  # hidden side: uses the pool's names
   timeout 9000 nice -n 5 env GYM_WORKERS=2 python -m eval.test.supervised_oracle \
     --output eval/test/oracle/predictions.json > logs/supervised_oracle.log 2>&1 || echo "oracle FAILED" &
 fi
 run unlearned_linear_baseline 5400 nice -n 5 env GYM_WORKERS=2 python -m baseline.unlearned_linear \
   --work checkpoints/unlearned_linear_baseline $(out unlearned_linear_baseline) &
-for s in 8 9; do
-  run reference_seed$s 3000 env GYM_WORKERS=1 $M --seed $s --work checkpoints/ref_seed$s $REF $(out reference_seed$s)
-  run better_shrink03_seed$s 3000 env GYM_WORKERS=1 $M --seed $s --work checkpoints/shrink03_s$s $REF \
-    --atlas-shrinkage 0.3 $(out better_shrink03_seed$s)
-done
-run weaker_linear_seed7 3000 env GYM_WORKERS=1 $M --seed 7 --mode linear --work checkpoints/linear_s7 $REF $(out weaker_linear_seed7)
-run weaker_radii_only_seed7 3000 env GYM_WORKERS=1 $M --seed 7 --lambda-scale 0,1,0 --work checkpoints/radii_s7 $REF \
-  $(out weaker_radii_only_seed7)
-run weaker_unlearned_quadratic_seed7 3000 env GYM_WORKERS=1 $M --seed 7 --mode unlearned_quadratic --work checkpoints/unlq_s7 \
-  --reuse checkpoints/our_unsupervised_atlas --reuse-stages "" $REF $(out weaker_unlearned_quadratic_seed7)
-run diag_more_bo_seed7 3000 env GYM_WORKERS=1 $M --seed 7 --learn-worms 6 --trials 60,60,20 --work checkpoints/more_bo_s7 \
-  $(out diag_more_bo_seed7)
 wait
 date
-# Stage B: paired better variants of the final reference.
-for v in "better_shrink03_seed7 0.3" "better_shrink05_seed7 0.5"; do
-  set -- $v
-  run $1 3000 env GYM_WORKERS=1 $M --seed 7 --work checkpoints/${1}_final --reuse checkpoints/ref7_final \
-    --reuse-stages prealign,bo,postalign,mgm $REF --atlas-shrinkage $2 $(out $1)
+
+# Stage B: variants built on the reference checkpoints (paired comparisons).
+# (In the audited run, the weaker variants and the 2x BO diagnostic were built on an
+#  earlier seed-7 run of the same code; their work dirs already exist and are reused.)
+for s in 7 8 9; do
+  W=checkpoints/ref_seed$s; [ $s = 7 ] && W=checkpoints/ref7_final
+  WD=checkpoints/shrink03_s$s; [ $s = 7 ] && WD=checkpoints/better_shrink03_seed7_final
+  run better_shrink03_seed$s 3000 env GYM_WORKERS=1 $M --seed $s --work $WD --reuse $W \
+    --reuse-stages prealign,bo,postalign,mgm $REF --atlas-shrinkage 0.3 $(out better_shrink03_seed$s)
 done
+run better_shrink05_seed7 3000 env GYM_WORKERS=1 $M --seed 7 --work checkpoints/better_shrink05_seed7_final \
+  --reuse checkpoints/ref7_final --reuse-stages prealign,bo,postalign,mgm $REF --atlas-shrinkage 0.5 $(out better_shrink05_seed7)
+run weaker_linear_seed7 5400 env GYM_WORKERS=1 $M --seed 7 --mode linear --work checkpoints/linear_s7 \
+  --reuse checkpoints/ref7_final --reuse-stages prealign,bo $REF $(out weaker_linear_seed7)
+run weaker_radii_only_seed7 5400 env GYM_WORKERS=1 $M --seed 7 --lambda-scale 0,1,0 --work checkpoints/radii_s7 \
+  --reuse checkpoints/ref7_final --reuse-stages prealign,bo,postalign $REF $(out weaker_radii_only_seed7)
+run weaker_unlearned_quadratic_seed7 5400 env GYM_WORKERS=1 $M --seed 7 --mode unlearned_quadratic \
+  --work checkpoints/unlq_s7 --reuse checkpoints/ref7_final --reuse-stages prealign $REF $(out weaker_unlearned_quadratic_seed7)
+run diag_more_bo_seed7 9000 env GYM_WORKERS=1 $M --seed 7 --learn-worms 6 --trials 60,60,20 --work checkpoints/more_bo_s7 \
+  --reuse checkpoints/ref7_final --reuse-stages prealign $(out diag_more_bo_seed7)
 date
 
 # Stage C: install the reference, freeze comparators, audit, final scoring.
