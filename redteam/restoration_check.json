@@ -1,0 +1,17 @@
+{
+  "starting_commit": "70a8cdbb22d1a19f7bed58d66b341f52016c5f6f",
+  "initial_regular_file_hash_count": 125,
+  "checked_regular_files": 124,
+  "exemptions": {
+    "action.yaml": "Mandatory submit/done scheduler state"
+  },
+  "mismatches": [],
+  "scripts_run_restored": true,
+  "current_predictions_equal_saved_initial_reference": true,
+  "new_job_directories_removed_after_archival": true,
+  "independent_stdlib_rank_check": true,
+  "distinct_cases": 34,
+  "successful_test_cases": 30,
+  "failed_test_cases": 4,
+  "preexisting_special_files_and_deleted_trajectory": "See redteam/start_status.txt; untouched"
+}

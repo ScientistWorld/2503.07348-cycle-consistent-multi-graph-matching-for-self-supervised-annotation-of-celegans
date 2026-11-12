@@ -1,0 +1,204 @@
+[hive] This stdout log is managed by Hive.
+[hive] job_id: 9040e657
+[hive] host: node
+[hive] node_id: 93fa860bd92c33cf1a1e3c2768ba01bf7f0cc525d94502e8eab0398f
+[hive] user: nexus/user (remote)
+[hive] resource: gpu-cpu-test
+[hive] gpus: 0
+[hive] cpus: 1
+[hive] workdir: /home/user
+[hive] timeout_sec: 21600
+[hive] started_at: 2026-11-12 06:17:41 EST
+[hive] command: apptainer exec --containall --cleanenv --env HF_HOME=/home/user/shared/hf_cache --env TRANSFORMERS_CACHE=/home/user/shared/hf_cache --env HF_DATASETS_CACHE=/home/user/shared/hf_cache/datasets --env TORCH_HOME=/home/user/shared/hf_cache/torch --bind /home/user/scratch/AgentWorkspaces/workspaces/2503.07348:/home/user --overlay /home/user/scratch/AgentWorkspaces/workspaces/2503.07348/environment/overlay.img:ro --bind /home/user/scratch/AgentWorkspaces/shared/datasets:/home/user/shared/datasets:ro --bind /home/user/scratch/AgentWorkspaces/shared/models:/home/user/shared/models:ro --bind /home/user/scratch/AgentWorkspaces/shared/hf_cache:/home/user/shared/hf_cache /home/user/scratch/AgentWorkspaces/workspaces/2503.07348/environment/container.sif bash -c 'cd /home/user && bash /home/user/scripts/run.sh'
+Running better_alignment_train6
+{
+  "name": "better_alignment_train6",
+  "test_command": [
+    "bash",
+    "scripts/evaluate_test.sh"
+  ],
+  "argv_extra": [],
+  "changes_to_eval_or_environment": false,
+  "input_sha256": "ea2f08b52367b1bfe3ef80582f5ddc0a97668518fdcb0ab64d41c02d1186dab8",
+  "methods_on_disk": {
+    "scaled_manual_segmentation": [
+      "unlearned_linear_baseline",
+      "our_unsupervised_atlas",
+      "supervised_oracle_atlas"
+    ]
+  },
+  "train_returncode": 0,
+  "train_output_written": true,
+  "train_output_exists": true,
+  "test_returncode": 0,
+  "test_output_written": true,
+  "test_output_exists": true,
+  "methods_in_test_results": {
+    "scaled_manual_segmentation": [
+      "unlearned_linear_baseline",
+      "our_unsupervised_atlas",
+      "supervised_oracle_atlas"
+    ]
+  },
+  "elapsed_seconds": 118.04217164797592
+}Running better_alignment_train24
+{
+  "name": "better_alignment_train24",
+  "test_command": [
+    "bash",
+    "scripts/evaluate_test.sh"
+  ],
+  "argv_extra": [],
+  "changes_to_eval_or_environment": false,
+  "input_sha256": "f630f8ab69ef71864c8a37a96e6d2844ac663987f2888afb67f7acd2e327f887",
+  "methods_on_disk": {
+    "scaled_manual_segmentation": [
+      "unlearned_linear_baseline",
+      "our_unsupervised_atlas",
+      "supervised_oracle_atlas"
+    ]
+  },
+  "train_returncode": 0,
+  "train_output_written": true,
+  "train_output_exists": true,
+  "test_returncode": 0,
+  "test_output_written": true,
+  "test_output_exists": true,
+  "methods_in_test_results": {
+    "scaled_manual_segmentation": [
+      "unlearned_linear_baseline",
+      "our_unsupervised_atlas",
+      "supervised_oracle_atlas"
+    ]
+  },
+  "elapsed_seconds": 271.41153742201277
+}Running better_statistical_atlas
+{
+  "name": "better_statistical_atlas",
+  "test_command": [
+    "bash",
+    "scripts/evaluate_test.sh"
+  ],
+  "argv_extra": [],
+  "changes_to_eval_or_environment": false,
+  "input_sha256": "46bc49fbc1aa7345ac4a9454dd400b7b4f78d9069ce4cbdf76a7ff5bf92466ea",
+  "methods_on_disk": {
+    "scaled_manual_segmentation": [
+      "unlearned_linear_baseline",
+      "our_unsupervised_atlas",
+      "supervised_oracle_atlas"
+    ]
+  },
+  "train_returncode": 0,
+  "train_output_written": true,
+  "train_output_exists": true,
+  "test_returncode": 0,
+  "test_output_written": true,
+  "test_output_exists": true,
+  "methods_in_test_results": {
+    "scaled_manual_segmentation": [
+      "unlearned_linear_baseline",
+      "our_unsupervised_atlas",
+      "supervised_oracle_atlas"
+    ]
+  },
+  "elapsed_seconds": 260.14329862300656
+}Running weaker_radii_only
+{
+  "name": "weaker_radii_only",
+  "test_command": [
+    "bash",
+    "scripts/evaluate_test.sh"
+  ],
+  "argv_extra": [],
+  "changes_to_eval_or_environment": false,
+  "input_sha256": "4f75fc90fb7685d33e9fab885238f4472ec344860e94bce402c964d6dc35e208",
+  "methods_on_disk": {
+    "scaled_manual_segmentation": [
+      "unlearned_linear_baseline",
+      "our_unsupervised_atlas",
+      "supervised_oracle_atlas"
+    ]
+  },
+  "train_returncode": 0,
+  "train_output_written": true,
+  "train_output_exists": true,
+  "test_returncode": 0,
+  "test_output_written": true,
+  "test_output_exists": true,
+  "methods_in_test_results": {
+    "scaled_manual_segmentation": [
+      "unlearned_linear_baseline",
+      "our_unsupervised_atlas",
+      "supervised_oracle_atlas"
+    ]
+  },
+  "elapsed_seconds": 10.720084783999482
+}Running shortcut_stale_scores
+{
+  "name": "shortcut_stale_scores",
+  "test_command": [
+    "bash",
+    "scripts/evaluate_test.sh"
+  ],
+  "argv_extra": [],
+  "changes_to_eval_or_environment": false,
+  "input_sha256": "d969ff4362136e8d53564347b4f4ddbc376bdf043a4cde3daa66f7c7539b675c",
+  "methods_on_disk": {
+    "scaled_manual_segmentation": [
+      "unlearned_linear_baseline",
+      "our_unsupervised_atlas",
+      "supervised_oracle_atlas"
+    ]
+  },
+  "train_returncode": 1,
+  "train_output_written": false,
+  "train_output_exists": false,
+  "train_error": "eval/train: 'NoneType' object has no attribute 'get'\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/home/user/eval/train/evaluate_slice.py\", line 187, in <module>\n    main()\n  File \"/home/user/eval/train/evaluate_slice.py\", line 166, in main\n    validate_experiment(exp_name, exp, len(ground_truth_labels))\n  File \"/home/user/eval/train/evaluate_slice.py\", line 90, in validate_experiment\n    labelings = method.get(\"test_labelings\")\n                ^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'get'\n",
+  "prewritten_scores_sha256": "0e14d1fdf98f6e455bb061984cda3bf4b93329653e996b39ada4d6d6bf5cb976",
+  "test_returncode": 1,
+  "test_output_written": false,
+  "test_output_exists": true,
+  "test_error": "eval/test: 'NoneType' object has no attribute 'get'\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/home/user/eval/test/evaluate_slice.py\", line 233, in <module>\n    main()\n  File \"/home/user/eval/test/evaluate_slice.py\", line 206, in main\n    validate_experiment(exp_name, exp, len(ground_truth_labels))\n  File \"/home/user/eval/test/evaluate_slice.py\", line 90, in validate_experiment\n    labelings = method.get(\"test_labelings\")\n                ^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'get'\n",
+  "prewritten_scores_survived": true,
+  "methods_in_test_results": {
+    "scaled_manual_segmentation": [
+      "unlearned_linear_baseline",
+      "our_unsupervised_atlas",
+      "supervised_oracle_atlas"
+    ]
+  },
+  "elapsed_seconds": 1.876075773005141
+}name	mean	min	std	invalid	gap	flag	rank_gain
+better_alignment	0.789128	0.689964	0.072284	0.000000	-0.019116	0.000000	0.544606
+better_alignment_train24	0.903226	0.887097	0.011977	0.000000	-0.133214	0.000000	1.192416
+better_alignment_train6	0.904421	0.892473	0.015646	0.000000	-0.134409	0.000000	1.198094
+better_statistical_atlas	0.917563	0.915771	0.001463	0.000000	-0.147551	0.000000	1.279120
+better_training24	0.765233	0.569892	0.138129	0.000000	0.004779	0.000000	0.306873
+reference	0.703704	0.496416	0.148550	0.000000	0.066308	0.000000	0.000000
+reference_seed7	0.703704	0.496416	0.148550	0.000000	0.066308	0.000000	0.000000
+reference_seed8	0.798088	0.612903	0.131019	0.000000	-0.028076	0.000000	0.474798
+reference_seed9	0.700119	0.476703	0.160160	0.000000	0.069892	0.000000	-0.038347
+shortcut_bruteforce_exemplars	0.578853	0.460573	0.100433	0.000000	0.191159	0.000000	-0.481939
+shortcut_claimed_scores	0.000000	0.000000	0.000000	0.000000	0.770012	0.000000	-3.034871
+shortcut_constant_outputs	0.000000	0.000000	0.000000	0.000000	0.770012	0.000000	-3.034871
+shortcut_direct_scores	0.000000	0.000000	0.000000	0.000000	0.770012	0.000000	-3.034871
+shortcut_duplicate_assignments	0.666667	0.000000	0.471405	0.000000	0.103345	0.000000	-0.779728
+shortcut_empty_experiments	MISSING	MISSING	MISSING	MISSING	MISSING	MISSING	0.000000
+shortcut_empty_outputs	0.000000	0.000000	0.000000	1.000000	0.770012	0.000000	-3.824151
+shortcut_failed_task_negative_flag	0.000000	0.000000	0.000000	0.000000	0.770012	-1000000.000000	0.911529
+shortcut_failed_task_oracle_flag	0.000000	0.000000	0.000000	0.000000	0.000000	-1000000.000000	1.782503
+shortcut_filter_methods	0.703704	0.496416	0.148550	0.000000	MISSING	0.000000	0.000000
+shortcut_fixed_ground_truth	1.000000	1.000000	0.000000	0.000000	-1.000000	0.000000	2.540437
+shortcut_label_lookup	1.000000	1.000000	0.000000	0.000000	-0.229988	0.000000	1.669463
+shortcut_negative_flag	0.703704	0.496416	0.148550	0.000000	0.066308	-1.000000	0.000004
+shortcut_null_outputs	0.000000	0.000000	0.000000	1.000000	0.770012	0.000000	-3.824151
+shortcut_omit_oracle	0.703704	0.496416	0.148550	0.000000	MISSING	0.000000	0.000000
+shortcut_oracle_degradation	0.703704	0.496416	0.148550	0.000000	-0.703704	0.000000	0.870974
+shortcut_selective_1	0.666667	0.000000	0.471405	0.000000	0.103345	0.000000	-0.779728
+shortcut_selective_10	0.700000	0.600000	0.141421	0.000000	0.070012	0.000000	0.067630
+weaker_linear	0.658303	0.465950	0.136022	0.000000	0.111708	0.000000	-0.192216
+weaker_noquadratic	0.655914	0.460573	0.138222	0.000000	0.114098	0.000000	-0.207477
+weaker_radii_only	0.005376	0.003584	0.001463	0.000000	0.764636	0.000000	-3.012109
+SEED SPREAD {"atlas_accuracy_mean": {"values": [0.7037037037037037, 0.7980884109916367, 0.7001194743130227], "range": 0.09796893667861406, "std": 0.0453617952614705}, "atlas_accuracy_min": {"values": [0.496415770609319, 0.6129032258064516, 0.4767025089605735], "range": 0.13620071684587814, "std": 0.06010044848461518}, "atlas_accuracy_std": {"values": [0.14854986580444596, 0.13101925986862847, 0.1601602073587566], "range": 0.029140947490128133, "std": 0.011978299805653542}, "invalid_assignment_rate": {"values": [0.0, 0.0, 0.0], "range": 0.0, "std": 0.0}, "gap_to_supervised_oracle": {"values": [0.06630824372759847, -0.028076463560334552, 0.06989247311827951], "range": 0.09796893667861406, "std": 0.0453617952614705}, "semantic_labels_used_for_training": {"values": [0.0, 0.0, 0.0], "range": 0.0, "std": 0.0}}
+FAILED RUNS shortcut_artifact_truth,shortcut_null_method,shortcut_stale_scores,shortcut_test_size

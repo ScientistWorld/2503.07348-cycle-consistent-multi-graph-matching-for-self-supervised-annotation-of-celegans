@@ -1,4 +1,2 @@
-action: submit
-gpus: 0
-test: false
-notes: "Audit follow-up: repair affine registration before learning at 6/24 trials, estimate nucleus-specific atlas variances, run radii-only ablation, and verify stale-score failure handling."
+action: done
+notes: "Audit complete: genuine quality changes move scores beyond seed spread, but visible labels, editable comparisons, missing metrics, and unchecked flags admit high-scoring shortcuts; 34 cases and restoration evidence committed."

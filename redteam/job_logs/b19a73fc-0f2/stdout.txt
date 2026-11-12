@@ -1,0 +1,101 @@
+[hive] This stdout log is managed by Hive.
+[hive] job_id: 084a18b1
+[hive] host: node
+[hive] node_id: fe800dc7639afcbc47285b27473804f2e8ccab9dc27fa6ed351fc4ce
+[hive] user: nexus/user (remote)
+[hive] resource: gpu-cpu-test
+[hive] gpus: 0
+[hive] cpus: 1
+[hive] workdir: /home/user
+[hive] timeout_sec: 21600
+[hive] started_at: 2026-11-12 06:07:06 EST
+[hive] command: apptainer exec --containall --cleanenv --env HF_HOME=/home/user/shared/hf_cache --env TRANSFORMERS_CACHE=/home/user/shared/hf_cache --env HF_DATASETS_CACHE=/home/user/shared/hf_cache/datasets --env TORCH_HOME=/home/user/shared/hf_cache/torch --bind /home/user/scratch/AgentWorkspaces/workspaces/2503.07348:/home/user --overlay /home/user/scratch/AgentWorkspaces/workspaces/2503.07348/environment/overlay.img:ro --bind /home/user/scratch/AgentWorkspaces/shared/datasets:/home/user/shared/datasets:ro --bind /home/user/scratch/AgentWorkspaces/shared/models:/home/user/shared/models:ro --bind /home/user/scratch/AgentWorkspaces/shared/hf_cache:/home/user/shared/hf_cache /home/user/scratch/AgentWorkspaces/workspaces/2503.07348/environment/container.sif bash -c 'cd /home/user && bash /home/user/scripts/run.sh'
+Running reference
+reference train= 0 test= 0 seconds= 1.01
+Running reference_seed7
+reference_seed7 train= 0 test= 0 seconds= 55.01
+Running reference_seed8
+reference_seed8 train= 0 test= 0 seconds= 55.26
+Running reference_seed9
+reference_seed9 train= 0 test= 0 seconds= 55.53
+Running better_training24
+better_training24 train= 0 test= 0 seconds= 161.5
+Running better_alignment
+better_alignment train= 0 test= 0 seconds= 51.83
+Running weaker_linear
+weaker_linear train= 0 test= 0 seconds= 1.02
+Running weaker_noquadratic
+weaker_noquadratic train= 0 test= 0 seconds= 4.86
+Running shortcut_bruteforce_exemplars
+shortcut_bruteforce_exemplars train= 0 test= 0 seconds= 6.6
+Running shortcut_label_lookup
+shortcut_label_lookup train= 0 test= 0 seconds= 1.04
+Running shortcut_selective_1
+shortcut_selective_1 train= 0 test= 0 seconds= 0.93
+Running shortcut_selective_10
+shortcut_selective_10 train= 0 test= 0 seconds= 0.82
+Running shortcut_duplicate_assignments
+shortcut_duplicate_assignments train= 0 test= 0 seconds= 0.89
+Running shortcut_oracle_degradation
+shortcut_oracle_degradation train= 0 test= 0 seconds= 0.86
+Running shortcut_negative_flag
+shortcut_negative_flag train= 0 test= 0 seconds= 0.98
+Running shortcut_failed_task_negative_flag
+shortcut_failed_task_negative_flag train= 0 test= 0 seconds= 0.88
+Running shortcut_failed_task_oracle_flag
+shortcut_failed_task_oracle_flag train= 0 test= 0 seconds= 0.85
+Running shortcut_fixed_ground_truth
+shortcut_fixed_ground_truth train= 0 test= 0 seconds= 0.85
+Running shortcut_empty_experiments
+shortcut_empty_experiments train= 0 test= 0 seconds= 0.88
+Running shortcut_filter_methods
+shortcut_filter_methods train= 0 test= 0 seconds= 0.94
+Running shortcut_omit_oracle
+shortcut_omit_oracle train= 0 test= 0 seconds= 0.96
+Running shortcut_claimed_scores
+shortcut_claimed_scores train= 0 test= 0 seconds= 0.86
+Running shortcut_constant_outputs
+shortcut_constant_outputs train= 0 test= 0 seconds= 0.85
+Running shortcut_empty_outputs
+shortcut_empty_outputs train= 0 test= 0 seconds= 0.82
+Running shortcut_null_outputs
+shortcut_null_outputs train= 0 test= 0 seconds= 0.99
+Running shortcut_null_method
+shortcut_null_method train= 1 test= 1 seconds= 0.81
+Running shortcut_test_size
+shortcut_test_size train= 1 test= 1 seconds= 0.79
+Running shortcut_artifact_truth
+shortcut_artifact_truth train= 1 test= 1 seconds= 1.06
+Running shortcut_direct_scores
+shortcut_direct_scores train= 0 test= 0 seconds= 0.92
+Running shortcut_stale_scores
+shortcut_stale_scores train= 1 test= 1 seconds= 0.91
+name	mean	min	std	invalid	gap	flag	rank_gain
+better_alignment	0.789128	0.689964	0.072284	0.000000	-0.019116	0.000000	0.562358
+better_training24	0.765233	0.569892	0.138129	0.000000	0.004779	0.000000	0.316193
+reference	0.703704	0.496416	0.148550	0.000000	0.066308	0.000000	0.000000
+reference_seed7	0.703704	0.496416	0.148550	0.000000	0.066308	0.000000	0.000000
+reference_seed8	0.798088	0.612903	0.131019	0.000000	-0.028076	0.000000	0.489314
+reference_seed9	0.700119	0.476703	0.160160	0.000000	0.069892	0.000000	-0.039689
+shortcut_bruteforce_exemplars	0.578853	0.460573	0.100433	0.000000	0.191159	0.000000	-0.494744
+shortcut_claimed_scores	0.000000	0.000000	0.000000	0.000000	0.770012	0.000000	-3.124126
+shortcut_constant_outputs	0.000000	0.000000	0.000000	0.000000	0.770012	0.000000	-3.124126
+shortcut_direct_scores	0.000000	0.000000	0.000000	0.000000	0.770012	0.000000	-3.124126
+shortcut_duplicate_assignments	0.666667	0.000000	0.471405	0.000000	0.103345	0.000000	-0.808875
+shortcut_empty_experiments	MISSING	MISSING	MISSING	MISSING	MISSING	MISSING	0.000000
+shortcut_empty_outputs	0.000000	0.000000	0.000000	1.000000	0.770012	0.000000	-3.861336
+shortcut_failed_task_negative_flag	0.000000	0.000000	0.000000	0.000000	0.770012	-1000000.000000	0.561923
+shortcut_failed_task_oracle_flag	0.000000	0.000000	0.000000	0.000000	0.000000	-1000000.000000	1.418397
+shortcut_filter_methods	0.703704	0.496416	0.148550	0.000000	MISSING	0.000000	0.000000
+shortcut_fixed_ground_truth	1.000000	1.000000	0.000000	0.000000	-1.000000	0.000000	2.578749
+shortcut_label_lookup	1.000000	1.000000	0.000000	0.000000	-0.229988	0.000000	1.722275
+shortcut_negative_flag	0.703704	0.496416	0.148550	0.000000	0.066308	-1.000000	0.000004
+shortcut_null_outputs	0.000000	0.000000	0.000000	1.000000	0.770012	0.000000	-3.861336
+shortcut_omit_oracle	0.703704	0.496416	0.148550	0.000000	MISSING	0.000000	0.000000
+shortcut_oracle_degradation	0.703704	0.496416	0.148550	0.000000	-0.703704	0.000000	0.856474
+shortcut_selective_1	0.666667	0.000000	0.471405	0.000000	0.103345	0.000000	-0.808875
+shortcut_selective_10	0.700000	0.600000	0.141421	0.000000	0.070012	0.000000	0.074121
+weaker_linear	0.658303	0.465950	0.136022	0.000000	0.111708	0.000000	-0.197933
+weaker_noquadratic	0.655914	0.460573	0.138222	0.000000	0.114098	0.000000	-0.213686
+SEED SPREAD {"atlas_accuracy_mean": {"values": [0.7037037037037037, 0.7980884109916367, 0.7001194743130227], "range": 0.09796893667861406, "std": 0.0453617952614705}, "atlas_accuracy_min": {"values": [0.496415770609319, 0.6129032258064516, 0.4767025089605735], "range": 0.13620071684587814, "std": 0.06010044848461518}, "atlas_accuracy_std": {"values": [0.14854986580444596, 0.13101925986862847, 0.1601602073587566], "range": 0.029140947490128133, "std": 0.011978299805653542}, "invalid_assignment_rate": {"values": [0.0, 0.0, 0.0], "range": 0.0, "std": 0.0}, "gap_to_supervised_oracle": {"values": [0.06630824372759847, -0.028076463560334552, 0.06989247311827951], "range": 0.09796893667861406, "std": 0.0453617952614705}, "semantic_labels_used_for_training": {"values": [0.0, 0.0, 0.0], "range": 0.0, "std": 0.0}}
+FAILED RUNS shortcut_artifact_truth,shortcut_null_method,shortcut_stale_scores,shortcut_test_size

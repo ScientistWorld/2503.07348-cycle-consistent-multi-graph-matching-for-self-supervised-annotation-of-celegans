@@ -18,3 +18,15 @@ evidence are retained. `summary.json` uses the metric directions and absolute
 coefficients in `scoring/reference.json` and normalizes over the successful
 audit cohort. Future attempts change that normalization; coordinatewise
 dominance findings do not depend on it.
+
+The completed audit used two CPU jobs, `b19a73fc-0f2` and `b5f1768c-58a`.
+`run_all.sh` now includes all 34 distinct cases; `run_followup.sh` is the
+five-case second-job bundle. The second job repeats the stale-score shortcut
+to distinguish a surviving file from a score actually written by the test.
+Full conclusions, seed spread, and the shortcut table are in `../REDTEAM.md`.
+The job logs are archived under `job_logs/`.
+
+Run these scripts as compute jobs in the gym container, not on a login node.
+Cases share that container but construct artifacts before starting the
+unchanged test script in its own process. There is no background process,
+import patch, or evaluator state required to reproduce a shortcut.

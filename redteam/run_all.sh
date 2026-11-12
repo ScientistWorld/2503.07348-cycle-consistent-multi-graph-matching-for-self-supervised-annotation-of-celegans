@@ -10,7 +10,9 @@ from pathlib import Path
 from redteam.fast_method import validate_equivalence
 Path('redteam/vectorization_checks.json').write_text(json.dumps(validate_equivalence(), indent=2))
 PY
-for name in reference reference_seed7 reference_seed8 reference_seed9 better_training24 better_alignment weaker_linear weaker_noquadratic \
+for name in reference reference_seed7 reference_seed8 reference_seed9 better_training24 better_alignment \
+  better_alignment_train6 better_alignment_train24 better_statistical_atlas \
+  weaker_linear weaker_noquadratic weaker_radii_only \
   shortcut_bruteforce_exemplars shortcut_label_lookup shortcut_selective_1 shortcut_selective_10 \
   shortcut_duplicate_assignments shortcut_oracle_degradation shortcut_negative_flag \
   shortcut_failed_task_negative_flag shortcut_failed_task_oracle_flag shortcut_fixed_ground_truth \
