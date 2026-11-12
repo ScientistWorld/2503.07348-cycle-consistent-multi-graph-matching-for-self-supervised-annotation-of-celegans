@@ -2,36 +2,44 @@
 
     python eval/train/evaluate_slice.py [--output scoring/scores_train.json]
 
-Scores the dev worms (data/worms/dev) of every method directory under
-outputs/ (each holding predictions.json) plus the fixed comparators in
-eval/train/fixed/. The entry ``our_unsupervised_atlas`` is always emitted; a
-missing, unreadable or invalid artifact scores the worst value of every metric.
+Scores every method directory under outputs/ on the 4 dev worms
+(data/worms/dev), plus the fixed comparators in eval/train/fixed/. The entry
+``our_unsupervised_atlas`` is always emitted. A method directory must hold
+  predictions.json  {"pool_cliques": {pool_worm_id: [clique id or -1 per row]}}
+  annotate.sh       annotate.sh <worm.txt> <labels.json>: writes one atlas label
+                    or -1 per row of ONE worm table
+annotate.sh is called once per dev worm (within TIMEOUT seconds) exactly as the
+hidden test calls it on the hidden worms. Any missing file, crash, timeout or
+invalid output fails the run, which then scores the worst value of every metric.
 
 Only a fixed random 10 % of the identities carry a visible dev label (the
 others are null); accuracy is measured on those labeled nuclei, an unbiased
 sample of the per-nucleus accuracy. Because the pool's names are not available
-on this side, atlas labels are
-named leave-one-out: to score dev worm d, every atlas label is named by greedy
-maximum voting over the true names of the nuclei it was assigned to in the
-other three dev worms (largest count first, each label and each name used
-once). Atlas accuracy of d = fraction of its nuclei whose label carries their
-true name, over d's labeled nuclei; unassigned nuclei count as wrong. The
-hidden test instead names the
-atlas labels from the pool cliques, so a method whose held-out labels are
-consistent with each other but not with its own pool cliques scores higher
-here than on the hidden test. The dev labels are for scoring only: using them to build,
-tune or select a method breaks the benchmark's label-free constraint.
+on this side, atlas labels are named leave-one-out: to score dev worm d, every
+atlas label is named by greedy maximum voting over the true names of the
+labeled nuclei it was assigned to in the other three dev worms (largest count
+first, each label and each name used once). Atlas accuracy of d = fraction of
+its labeled nuclei whose label carries their true name; unassigned nuclei count
+as wrong. The hidden test names atlas labels from the pool cliques of all 12
+pool worms instead, so it is less noisy and typically a few points higher.
 
-Validity (otherwise the run fails): every pool worm and dev worm present, one
-integer >= -1 per nucleus, no label / clique used twice within a worm.
+The dev labels are for scoring only: building, tuning or selecting a method
+with them breaks the benchmark's label-free constraint. Fixed comparators whose
+raw labels would hand out supervision are stored as frozen scores
+(``frozen_metrics``), computed once with ``--freeze``.
 """
 from __future__ import annotations
 
 import argparse
 import json
 import math
+import os
+import shutil
+import subprocess
 import sys
+import tempfile
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -39,16 +47,17 @@ ROOT = HERE.parents[1]
 OUTPUTS = ROOT / "outputs"
 FIXED = HERE / "fixed"
 POOL_DIR = ROOT / "data" / "worms" / "pool"
+DEV_DIR = ROOT / "data" / "worms" / "dev"
 EXPERIMENT = "scaled_manual_segmentation"
 CANONICAL = "our_unsupervised_atlas"
 ORACLE = "supervised_oracle_atlas"
+TIMEOUT = 900
 WORST = {"atlas_accuracy_mean": 0.0, "atlas_accuracy_min": 0.0, "atlas_accuracy_std": 0.5}
 MAX_BYTES = 50_000_000
 
 
-def pool_sizes() -> dict:
-    return {p.stem: sum(1 for line in p.read_text().splitlines() if line.strip())
-            for p in sorted(POOL_DIR.glob("*.txt"))}
+def row_count(path: Path) -> int:
+    return sum(1 for line in path.read_text().splitlines() if line.strip())
 
 
 def validate(values, n: int, where: str) -> list[int]:
@@ -83,21 +92,11 @@ def greedy_names(labels: dict, dev: dict) -> dict:
     return names
 
 
-def dev_scores(pred, dev: dict, sizes: dict | None) -> tuple[dict, dict]:
-    if not isinstance(pred, dict) or not isinstance(pred.get("labelings"), dict):
-        raise ValueError("predictions need a 'labelings' object")
-    if sizes is not None:
-        cliques = pred.get("pool_cliques")
-        if not isinstance(cliques, dict):
-            raise ValueError("predictions need a 'pool_cliques' object")
-        for wid, n in sizes.items():
-            validate(cliques.get(wid), n, f"pool_cliques[{wid}]")
-    labels = {w: validate(pred["labelings"].get(w), len(t), f"labelings[{w}]") for w, t in dev.items()}
+def dev_scores(labels: dict, dev: dict) -> tuple[dict, dict]:
     acc = {}
     for scored in sorted(labels):
         names = greedy_names({w: lab for w, lab in labels.items() if w != scored}, dev)
-        lab = labels[scored]
-        truth = dev[scored]
+        lab, truth = labels[scored], dev[scored]
         labeled = [node for node, name in enumerate(truth) if name is not None]
         acc[scored] = sum(1 for node in labeled if lab[node] >= 0 and names.get(lab[node]) == truth[node]) / len(labeled)
     values = list(acc.values())
@@ -109,6 +108,26 @@ def dev_scores(pred, dev: dict, sizes: dict | None) -> tuple[dict, dict]:
     }, acc
 
 
+def run_annotator(method_dir: Path, worm: str, n_rows: int) -> list[int]:
+    script = method_dir / "annotate.sh"
+    if not script.is_file():
+        raise ValueError(f"{script.relative_to(ROOT)} not found")
+    with tempfile.TemporaryDirectory(prefix="cellid_") as tmp:
+        inp, out = Path(tmp) / "worm.txt", Path(tmp) / "labels.json"
+        shutil.copyfile(DEV_DIR / f"{worm}.txt", inp)
+        try:
+            proc = subprocess.run(["bash", str(script), str(inp), str(out)], cwd=ROOT, capture_output=True,
+                                  text=True, timeout=TIMEOUT)
+        except subprocess.TimeoutExpired:
+            raise ValueError(f"annotate.sh exceeded {TIMEOUT}s on a dev worm")
+        if proc.returncode != 0:
+            raise ValueError(f"annotate.sh exited {proc.returncode}: {proc.stderr[-500:]}")
+        if not out.is_file() or out.stat().st_size > MAX_BYTES:
+            raise ValueError("annotate.sh wrote no (or an oversized) labels file")
+        labels = json.loads(out.read_text())
+    return validate(labels, n_rows, "annotate.sh output")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", default=str(ROOT / "scoring" / "scores_train.json"))
@@ -118,40 +137,72 @@ def main() -> None:
     dev = json.loads((HERE / "dev_labels.json").read_text())["dev"]
     if args.freeze:
         name, src = args.freeze
-        metrics, acc = dev_scores(json.loads(Path(src).read_text()), dev, None)
+        content = json.loads(Path(src).read_text())
+        labels = {w: validate(content["labelings"].get(w), len(t), f"labelings[{w}]") for w, t in dev.items()}
+        metrics, acc = dev_scores(labels, dev)
         FIXED.mkdir(parents=True, exist_ok=True)
         (FIXED / f"{name}.json").write_text(json.dumps({"frozen_metrics": metrics, "per_worm": acc}, indent=2))
         print(f"froze {name}: {metrics}")
         return
-    sizes = pool_sizes()
+    pool_sizes = {p.stem: row_count(p) for p in sorted(POOL_DIR.glob("*.txt"))}
     fixed = {p.stem: p for p in sorted(FIXED.glob("*.json"))}
     submitted = {}
     if OUTPUTS.is_dir():
         for d in sorted(OUTPUTS.iterdir()):
             if d.is_dir() and not d.name.startswith(("_", ".")):
-                submitted[d.name] = d / "predictions.json"
-    submitted.setdefault(CANONICAL, OUTPUTS / CANONICAL / "predictions.json")
+                submitted[d.name] = d
+    submitted.setdefault(CANONICAL, OUTPUTS / CANONICAL)
+    submitted = {n: d for n, d in submitted.items() if n not in fixed}
 
     results, per_worm, failures = {}, {}, {}
-    entries = [(n, p, None) for n, p in fixed.items()]
-    entries += [(n, p, sizes) for n, p in submitted.items() if n not in fixed]
-    for name, path, check_sizes in entries:
+    for name, path in fixed.items():
         try:
+            content = json.loads(path.read_text())
+            results[name], per_worm[name] = dict(content["frozen_metrics"]), content.get("per_worm", {})
+        except Exception as exc:
+            failures[name] = f"{type(exc).__name__}: {exc}"
+
+    ok = []
+    for name, d in submitted.items():
+        try:
+            path = d / "predictions.json"
             if not path.is_file():
                 raise ValueError(f"{path.relative_to(ROOT)} not found")
             if path.stat().st_size > MAX_BYTES:
-                raise ValueError("predictions file too large")
-            content = json.loads(path.read_text())
-            if check_sizes is None and isinstance(content, dict) and "frozen_metrics" in content:
-                # fixed comparator frozen by the hidden side (its raw labels would leak supervision)
-                metrics, acc = dict(content["frozen_metrics"]), content.get("per_worm", {})
-            else:
-                metrics, acc = dev_scores(content, dev, check_sizes)
-            per_worm[name] = acc
+                raise ValueError("predictions.json too large")
+            pred = json.loads(path.read_text())
+            if not isinstance(pred, dict) or not isinstance(pred.get("pool_cliques"), dict):
+                raise ValueError("predictions.json needs a 'pool_cliques' object")
+            for wid, n in pool_sizes.items():
+                validate(pred["pool_cliques"].get(wid), n, f"pool_cliques[{wid}]")
+            ok.append(name)
         except Exception as exc:
-            metrics = dict(WORST)
             failures[name] = f"{type(exc).__name__}: {exc}"
-        results[name] = metrics
+
+    def task(item):
+        name, worm = item
+        try:
+            return name, worm, run_annotator(submitted[name], worm, len(dev[worm])), None
+        except Exception as exc:
+            return name, worm, None, f"{type(exc).__name__}: {exc}"
+
+    try:
+        n_workers = max(1, len(os.sched_getaffinity(0)))
+    except AttributeError:  # pragma: no cover
+        n_workers = max(1, os.cpu_count() or 1)
+    labels_of = {name: {} for name in ok}
+    with ThreadPoolExecutor(max_workers=n_workers) as executor:
+        for name, worm, labels, error in executor.map(task, [(n, w) for n in ok for w in sorted(dev)]):
+            if error is not None:
+                failures.setdefault(name, f"{worm}: {error}")
+            else:
+                labels_of[name][worm] = labels
+    for name in submitted:
+        if name in failures:
+            results[name] = dict(WORST)
+        else:
+            results[name], per_worm[name] = dev_scores(labels_of[name], dev)
+
     if ORACLE not in results or ORACLE in failures:
         raise SystemExit("fixed supervised comparator missing or invalid: eval/train/fixed is incomplete")
     oracle_mean = results[ORACLE]["atlas_accuracy_mean"]
@@ -162,9 +213,9 @@ def main() -> None:
         "_metadata": {
             "slice": "train",
             "target_worms": sorted(dev),
-            "naming": "leave-one-out greedy maximum voting over the other dev worms",
+            "naming": "leave-one-out greedy maximum voting over the other dev worms (labeled identities only)",
             "fixed_comparators": sorted(fixed),
-            "submitted_methods": sorted(n for n in submitted if n not in fixed),
+            "submitted_methods": sorted(submitted),
             "failures": failures,
             "per_worm_accuracy": per_worm,
         },

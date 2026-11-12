@@ -23,11 +23,14 @@ anonymized worms. Pipeline (paper Sec. 3 and Appendix B):
    cycle-consistent cliques.
 6. Unsupervised atlas: nucleus-specific Gaussian statistics of the cliques, cost
    weights lambda = ||diag(Sigma)|| normalised to length sqrt(3) (Sec. 3.3).
-7. Worm-to-atlas GM (Fusion Moves) for every held-out worm.
+7. Annotator for new worms (method/annotate.py, one worm per call): the worm is
+   re-aligned to the target worm exactly as the pool was (7 unlearned + 7
+   learned iterations) and matched to the atlas with Fusion Moves.
 
-No semantic label is read anywhere. The output artifact holds the clique id of
-every pool nucleus and the atlas label (clique id) of every held-out nucleus;
-the evaluators attach biological names afterwards (paper Sec. 3.3).
+No semantic label is read anywhere and no held-out worm is seen during
+training. The output directory holds predictions.json (clique id of every pool
+nucleus), model.json and annotate.sh; the evaluators run annotate.sh on each
+held-out worm and attach biological names afterwards (paper Sec. 3.3).
 """
 from __future__ import annotations
 
@@ -305,14 +308,14 @@ def run(args: argparse.Namespace) -> None:
                     if not dst.exists():
                         shutil.copyfile(src_file, dst)
                         log(f"reusing {src_file}")
-    raw = {g: load_group(g) for g in ("pool", "dev", "test")}
-    log(f"loaded {len(raw['pool'])} pool, {len(raw['dev'])} dev, {len(raw['test'])} test worms "
-        f"({raw['pool'][0].n} nuclei each)")
+    raw = {"pool": load_group("pool")}
+    log(f"loaded {len(raw['pool'])} pool worms ({raw['pool'][0].n} nuclei each)")
     trials = tuple(int(v) for v in args.trials.split(","))
     quadratic = args.mode in ("full", "unlearned_quadratic")
     ablate = tuple(float(v) for v in args.lambda_scale.split(","))
 
-    # 1-2. Re-alignment target and first (unlearned, dense linear) re-alignment.
+    # 1-2. Re-alignment target and first (unlearned, dense linear) re-alignment of the pool.
+    pre_params = gm.WormParams(c0=C0_LEARN)
     pre_path = work / "prealign.npz"
     if pre_path.exists():
         groups = load_worms(pre_path, raw)
@@ -322,16 +325,13 @@ def run(args: argparse.Namespace) -> None:
         target_idx = star_center(raw["pool"], seed=args.seed)
         target = raw["pool"][target_idx]
         log(f"re-alignment target: pool worm {target.worm_id}")
-        others = [(g, w) for g in raw for w in raw[g] if not (g == "pool" and w.worm_id == target.worm_id)]
-        aligned = realign([w for _, w in others], target, gm.WormParams(c0=C0_LEARN), False,
-                          args.realign_iterations, args.seed, "unlearned")
-        groups = {g: [] for g in raw}
-        it = iter(aligned)
-        for g in raw:
-            for w in raw[g]:
-                groups[g].append(w if (g == "pool" and w.worm_id == target.worm_id) else next(it))
+        others = [w for w in raw["pool"] if w.worm_id != target.worm_id]
+        aligned = iter(realign(others, target, pre_params, False, args.realign_iterations, args.seed,
+                               "unlearned"))
+        groups = {"pool": [w if w.worm_id == target.worm_id else next(aligned) for w in raw["pool"]]}
         save_worms(pre_path, groups, {"target": target_idx})
-    target_id = raw["pool"][target_idx].worm_id
+    target_raw = raw["pool"][target_idx]
+    target_id = target_raw.worm_id
 
     # 3. Bayesian optimisation of the cross-nucleus parameters.
     bo_path = work / "bo.json"
@@ -357,19 +357,17 @@ def run(args: argparse.Namespace) -> None:
         bo_path.write_text(json.dumps({"params": params.to_dict(), "history": history}, indent=2))
     log(f"parameters: {params.to_dict()}")
 
-    # 4. Second re-alignment with the learned model.
+    # 4. Second re-alignment of the pool with the learned model.
     post_path = work / "postalign.npz"
     if post_path.exists():
         groups = load_worms(post_path, groups)
         log("loaded second re-alignment")
     elif args.second_realign:
         target = groups["pool"][target_idx]
-        others = [(g, w) for g in groups for w in groups[g] if not (g == "pool" and w.worm_id == target_id)]
-        aligned = realign([w for _, w in others], target, params, quadratic, args.realign_iterations,
-                          args.seed + 1, "learned")
-        it = iter(aligned)
-        groups = {g: [w if (g == "pool" and w.worm_id == target_id) else next(it) for w in groups[g]]
-                  for g in groups}
+        others = [w for w in groups["pool"] if w.worm_id != target_id]
+        aligned = iter(realign(others, target, params, quadratic, args.realign_iterations, args.seed + 1,
+                               "learned"))
+        groups = {"pool": [w if w.worm_id == target_id else next(aligned) for w in groups["pool"]]}
         save_worms(post_path, groups)
 
     # 5. Multi-graph matching of the pool -> cycle-consistent cliques.
@@ -380,12 +378,10 @@ def run(args: argparse.Namespace) -> None:
     mgm_params.w_cen, mgm_params.w_rad, mgm_params.w_off = ablate
     mgm_path = work / f"mgm_{args.lambda_scale.replace(',', '_')}.json"
     pool = groups["pool"]
-    if args.transductive:  # SHORTCUT diagnostic: also put the held-out test worms into the MGM / atlas
-        mgm_path = mgm_path.with_name("transductive_" + mgm_path.name)
-        pool = pool + groups["test"]
     sizes = [w.n for w in pool]
     if mgm_path.exists():
-        membership = [np.asarray(m, dtype=int) for m in json.loads(mgm_path.read_text())["membership"]]
+        membership = [np.asarray(m, dtype=int)[: w.n] for m, w in
+                      zip(json.loads(mgm_path.read_text())["membership"], pool)]
         log("loaded multi-graph matching")
     else:
         t0 = time.time()
@@ -407,16 +403,28 @@ def run(args: argparse.Namespace) -> None:
         atlas = build_unsupervised_atlas(pool, membership, weights, shrinkage=args.atlas_shrinkage)
         log(f"atlas refinement {refine + 1}: {atlas.size} labels")
 
-    # 7. Annotate every held-out worm by worm-to-atlas matching.
-    t0 = time.time()
-    labelings = annotate(atlas, groups["dev"] + groups["test"], params, quadratic, seed=args.seed + 3)
-    log(f"annotated {len(labelings)} held-out worms ({time.time() - t0:.0f}s)")
-
-    pool_ids = {w.worm_id for w in groups["pool"]}
+    # 7. Package the annotator: every new worm is re-aligned to the target worm
+    #    (unlearned, then learned model; 7 iterations each) and matched to the atlas.
+    out_dir = Path(args.output).parent
+    model = {
+        "format": "cellid-annotator-v1",
+        "seed": args.seed,
+        "target_centroids": target_raw.centroids.tolist(),
+        "target_radii": target_raw.radii.tolist(),
+        "realign": [
+            {"params": pre_params.to_dict(), "quadratic": False, "iterations": args.realign_iterations},
+        ] + ([{"params": params.to_dict(), "quadratic": quadratic, "iterations": args.realign_iterations}]
+             if args.second_realign else []),
+        "atlas": {"pool_centroids": [w.centroids.tolist() for w in pool],
+                  "pool_radii": [w.radii.tolist() for w in pool],
+                  "membership": [m.tolist() for m in membership],
+                  "weights": list(weights), "shrinkage": args.atlas_shrinkage},
+        "match": {"quadratic": quadratic, "nbr_var": list(params.cen_var), "nbr_k": params.neighbor_count},
+    }
+    write_annotator(out_dir, model)
     output = {
-        "format": "cellid-atlas-v1",
-        "pool_cliques": {w.worm_id: m.tolist() for w, m in zip(pool, membership) if w.worm_id in pool_ids},
-        "labelings": {k: v.tolist() for k, v in labelings.items()},
+        "format": "cellid-atlas-v2",
+        "pool_cliques": {w.worm_id: m.tolist() for w, m in zip(pool, membership)},
         "info": {
             "method": "cycle-consistent MGM + BO (synchronisation loss) unsupervised atlas",
             "mode": args.mode,
@@ -432,9 +440,26 @@ def run(args: argparse.Namespace) -> None:
             "seconds": time.time() - t_start,
         },
     }
-    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     Path(args.output).write_text(json.dumps(output))
-    log(f"wrote {args.output} ({time.time() - t_start:.0f}s total)")
+    log(f"wrote {args.output}, {out_dir / 'model.json'} and {out_dir / 'annotate.sh'} "
+        f"({time.time() - t_start:.0f}s total)")
+
+
+ANNOTATE_SH = """#!/bin/bash
+# Annotate ONE worm table with this directory's model:
+#   bash annotate.sh <worm.txt> <labels.json>
+# labels.json receives one atlas label (pool clique id) or -1 per input row.
+DIR="$(cd "$(dirname "$0")" && pwd)"
+cd /home/user && exec env GYM_WORKERS=1 python -m method.annotate --model "$DIR/model.json" "$1" "$2"
+"""
+
+
+def write_annotator(out_dir: Path, model: dict) -> None:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "model.json").write_text(json.dumps(model))
+    script = out_dir / "annotate.sh"
+    script.write_text(ANNOTATE_SH)
+    script.chmod(0o755)
 
 
 def main() -> None:
@@ -457,8 +482,6 @@ def main() -> None:
                         help="re-alignment iterations per round (paper: 7; lower only for smoke tests)")
     parser.add_argument("--atlas-shrinkage", type=float, default=0.0)
     parser.add_argument("--atlas-refine", type=int, default=0)
-    parser.add_argument("--transductive", action="store_true",
-                        help="audit only: include the held-out test worms in the multi-graph matching (not allowed)")
     run(parser.parse_args())
 
 

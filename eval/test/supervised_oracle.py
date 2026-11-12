@@ -24,7 +24,7 @@ from pathlib import Path
 import numpy as np
 
 from data import gmtools as gm
-from data.worms import load_group
+from data.worms import load_group, load_worm
 
 HERE = Path(__file__).resolve().parent
 SUPERVISED_WEIGHTS = (0.48, 0.34, 0.81)
@@ -52,7 +52,8 @@ def main() -> None:
     args = parser.parse_args()
     t_start = time.time()
     keys = json.loads((HERE / "keys.json").read_text())
-    raw = {g: load_group(g) for g in ("pool", "dev", "test")}
+    raw = {g: load_group(g) for g in ("pool", "dev")}
+    raw["test"] = [load_worm(p) for p in sorted((HERE / "worms").glob("*.txt"))]
     pool = raw["pool"]
     names = [keys["pool"][w.worm_id] for w in pool]
     vocab = sorted(set().union(*map(set, names)))

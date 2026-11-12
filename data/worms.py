@@ -7,8 +7,9 @@ no identity information.
 
 Groups (``data/worms/<group>/``):
   pool  12 worms to build an identity reference from (no labels anywhere visible)
-  dev    4 held-out worms scored by the visible evaluator (scripts/evaluate_train.sh)
-  test  10 held-out worms scored by the hidden evaluator (scripts/evaluate_test.sh)
+  dev    4 held-out worms annotated by the visible evaluator (scripts/evaluate_train.sh)
+The 10 hidden test worms are not in data/: the hidden evaluator hands them, one
+at a time, to the submission's annotate.sh.
 """
 from __future__ import annotations
 
@@ -18,7 +19,7 @@ from pathlib import Path
 import numpy as np
 
 ROOT = Path(__file__).resolve().parent / "worms"
-GROUPS = ("pool", "dev", "test")
+GROUPS = ("pool", "dev")
 
 
 @dataclass

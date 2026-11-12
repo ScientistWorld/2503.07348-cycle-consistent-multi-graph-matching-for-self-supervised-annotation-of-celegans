@@ -72,6 +72,8 @@ outputs/*
 !outputs/our_unsupervised_atlas/
 outputs/our_unsupervised_atlas/*
 !outputs/our_unsupervised_atlas/predictions.json
+!outputs/our_unsupervised_atlas/model.json
+!outputs/our_unsupervised_atlas/annotate.sh
 hardening/runs/
 logs/
 jobs/

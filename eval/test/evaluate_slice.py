@@ -2,40 +2,53 @@
 
     python eval/test/evaluate_slice.py [--output scoring/scores_test.json]
 
-Scores every method directory under outputs/ (each holding predictions.json),
-plus the fixed comparators frozen in eval/test/fixed/. The ranked entry
-``our_unsupervised_atlas`` is always emitted; a missing, unreadable or invalid
-artifact scores the worst value of every metric. Only raw assignments are
-read: every number is recomputed here from the hidden labels in keys.json.
+Scores every method directory under outputs/ plus the fixed comparators frozen
+in eval/test/fixed/. The ranked entry ``our_unsupervised_atlas`` is always
+emitted. A method directory must hold
+  predictions.json  {"pool_cliques": {pool_worm_id: [clique id or -1 per row]}}
+  annotate.sh       annotate.sh <worm.txt> <labels.json>: writes one atlas label
+                    (pool clique id) or -1 per row of ONE worm table
+The 10 hidden test worms (eval/test/worms/, never visible to a submission) are
+handed to annotate.sh one per call, each within TIMEOUT seconds. Any missing
+file, crash, timeout or invalid output fails the run, which then scores the
+worst value of every metric. Every number is recomputed here from the raw
+assignments and the hidden names in keys.json.
 
 Scoring (paper Sec. 3.3 / 4):
   * the method's pool cliques are named by greedy maximum voting over the
     hidden names of the pool nuclei (largest name count first, each clique and
     each name used once); unnamed cliques count as wrong;
-  * atlas accuracy of a held-out worm = fraction of its nuclei whose assigned
-    atlas label (clique id) carries the nucleus' true name; unassigned nuclei
-    count as wrong; denominator = all nuclei of the worm;
+  * atlas accuracy of a test worm = fraction of its nuclei whose atlas label
+    carries the nucleus' true name; unassigned nuclei count as wrong;
+    denominator = all nuclei of the worm;
   * pre-atlas accuracy (diagnostic) = the same fraction on the pool itself.
-Validity (hard constraint, otherwise the run fails): every pool and test worm
-present, one integer >= -1 per nucleus, no atlas label / clique used twice
-within a worm.
+Validity: every pool worm present, one integer >= -1 per nucleus, no clique /
+atlas label used twice within a worm.
 """
 from __future__ import annotations
 
 import argparse
 import json
 import math
+import os
+import shutil
+import subprocess
 import sys
+import tempfile
+import time
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 OUTPUTS = ROOT / "outputs"
 FIXED = HERE / "fixed"
+WORMS = HERE / "worms"
 EXPERIMENT = "scaled_manual_segmentation"
 CANONICAL = "our_unsupervised_atlas"
 ORACLE = "supervised_oracle_atlas"
+TIMEOUT = 900  # seconds per worm and call
 WORST = {
     "atlas_accuracy_mean": 0.0,
     "atlas_accuracy_min": 0.0,
@@ -88,17 +101,7 @@ def accuracy(labels: list[int], truth: list[str], names: dict) -> float:
     return correct / len(truth)
 
 
-def score(pred, pool_names: dict, test_names: dict) -> tuple[dict, dict]:
-    if not isinstance(pred, dict):
-        raise ValueError("predictions must be a JSON object")
-    pool_cliques = pred.get("pool_cliques")
-    labelings = pred.get("labelings")
-    if not isinstance(pool_cliques, dict) or not isinstance(labelings, dict):
-        raise ValueError("predictions need 'pool_cliques' and 'labelings' objects")
-    cliques = {w: check_assignment(pool_cliques.get(w), len(n), f"pool_cliques[{w}]")
-               for w, n in pool_names.items()}
-    labels = {w: check_assignment(labelings.get(w), len(n), f"labelings[{w}]")
-              for w, n in test_names.items()}
+def score(cliques: dict, labels: dict, pool_names: dict, test_names: dict) -> tuple[dict, dict]:
     names = greedy_names(cliques, pool_names)
     acc = {w: accuracy(labels[w], test_names[w], names) for w in sorted(test_names)}
     pre = [accuracy(cliques[w], pool_names[w], names) for w in sorted(pool_names)]
@@ -121,6 +124,40 @@ def load_json(path: Path):
     return json.loads(path.read_text())
 
 
+def read_cliques(pred, pool_names: dict) -> dict:
+    if not isinstance(pred, dict) or not isinstance(pred.get("pool_cliques"), dict):
+        raise ValueError("predictions.json needs a 'pool_cliques' object")
+    return {w: check_assignment(pred["pool_cliques"].get(w), len(n), f"pool_cliques[{w}]")
+            for w, n in pool_names.items()}
+
+
+def run_annotator(method_dir: Path, worm: str, n_rows: int) -> list[int]:
+    script = method_dir / "annotate.sh"
+    if not script.is_file():
+        raise ValueError(f"{script.relative_to(ROOT)} not found")
+    with tempfile.TemporaryDirectory(prefix="cellid_") as tmp:
+        inp, out = Path(tmp) / "worm.txt", Path(tmp) / "labels.json"
+        shutil.copyfile(WORMS / f"{worm}.txt", inp)
+        try:
+            proc = subprocess.run(["bash", str(script), str(inp), str(out)], cwd=ROOT, capture_output=True,
+                                  text=True, timeout=TIMEOUT)
+        except subprocess.TimeoutExpired:
+            raise ValueError(f"annotate.sh exceeded {TIMEOUT}s on a test worm")
+        if proc.returncode != 0:
+            raise ValueError(f"annotate.sh exited {proc.returncode}: {proc.stderr[-500:]}")
+        if not out.is_file() or out.stat().st_size > MAX_BYTES:
+            raise ValueError("annotate.sh wrote no (or an oversized) labels file")
+        labels = json.loads(out.read_text())
+    return check_assignment(labels, n_rows, "annotate.sh output")
+
+
+def workers() -> int:
+    try:
+        return max(1, len(os.sched_getaffinity(0)))
+    except AttributeError:  # pragma: no cover
+        return max(1, os.cpu_count() or 1)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", default=str(ROOT / "scoring" / "scores_test.json"))
@@ -132,25 +169,59 @@ def main() -> None:
     if OUTPUTS.is_dir():
         for d in sorted(OUTPUTS.iterdir()):
             if d.is_dir() and not d.name.startswith(("_", ".")):
-                submitted[d.name] = d / "predictions.json"
-    submitted.setdefault(CANONICAL, OUTPUTS / CANONICAL / "predictions.json")
+                submitted[d.name] = d
+    submitted.setdefault(CANONICAL, OUTPUTS / CANONICAL)
     shadowed = sorted(n for n in submitted if n in fixed)
+    submitted = {n: d for n, d in submitted.items() if n not in fixed}
 
     results: dict = {}
     per_worm: dict = {}
     failures: dict = {}
-    for name, path in list(fixed.items()) + [(n, p) for n, p in submitted.items() if n not in fixed]:
-        try:
-            metrics, acc = score(load_json(path), pool_names, test_names)
-            per_worm[name] = acc
-        except Exception as exc:  # any failure scores worst values
-            metrics = dict(WORST)
-            failures[name] = f"{type(exc).__name__}: {exc}"
-        results[name] = metrics
+    seconds: dict = {}
 
-    oracle_mean = results.get(ORACLE, {}).get("atlas_accuracy_mean")
-    if ORACLE in failures or oracle_mean is None:
+    for name, path in fixed.items():  # frozen comparators: stored assignments
+        try:
+            pred = load_json(path)
+            cliques = read_cliques(pred, pool_names)
+            labels = {w: check_assignment(pred["labelings"].get(w), len(n), f"labelings[{w}]")
+                      for w, n in test_names.items()}
+            results[name], per_worm[name] = score(cliques, labels, pool_names, test_names)
+        except Exception as exc:
+            failures[name] = f"{type(exc).__name__}: {exc}"
+
+    cliques_of = {}
+    for name, d in submitted.items():
+        try:
+            cliques_of[name] = read_cliques(load_json(d / "predictions.json"), pool_names)
+        except Exception as exc:
+            failures[name] = f"{type(exc).__name__}: {exc}"
+    tasks = [(name, w) for name in cliques_of for w in sorted(test_names)]
+
+    def task(item):
+        name, worm = item
+        t0 = time.time()
+        try:
+            return name, worm, run_annotator(submitted[name], worm, len(test_names[worm])), None, time.time() - t0
+        except Exception as exc:
+            return name, worm, None, f"{type(exc).__name__}: {exc}", time.time() - t0
+
+    labels_of: dict = {name: {} for name in cliques_of}
+    with ThreadPoolExecutor(max_workers=workers()) as pool:
+        for name, worm, labels, error, dt in pool.map(task, tasks):
+            seconds[name] = seconds.get(name, 0.0) + dt
+            if error is not None:
+                failures.setdefault(name, f"{worm}: {error}")
+            else:
+                labels_of[name][worm] = labels
+    for name in submitted:
+        if name in failures:
+            results[name] = dict(WORST)
+            continue
+        results[name], per_worm[name] = score(cliques_of[name], labels_of[name], pool_names, test_names)
+
+    if ORACLE not in results or ORACLE in failures:
         raise SystemExit("fixed supervised comparator missing or invalid: eval/test/fixed is incomplete")
+    oracle_mean = results[ORACLE]["atlas_accuracy_mean"]
     for name, metrics in results.items():
         if name != ORACLE:
             metrics["gap_to_supervised_oracle"] = oracle_mean - metrics["atlas_accuracy_mean"]
@@ -160,9 +231,10 @@ def main() -> None:
             "slice": "test",
             "target_worms": sorted(test_names),
             "fixed_comparators": sorted(fixed),
-            "submitted_methods": sorted(n for n in submitted if n not in fixed),
+            "submitted_methods": sorted(submitted),
             "ignored_reserved_names": shadowed,
             "failures": failures,
+            "annotation_seconds": seconds,
             "per_worm_accuracy": per_worm,
         },
         "experiments": {EXPERIMENT: {"results": results}},

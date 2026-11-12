@@ -15,7 +15,9 @@ The script
       test (10 worms whose labels exist only in eval/test/keys.json);
   * shuffles the rows of every worm with a fixed per-worm permutation and drops
     the index and name columns, writing ``x y z r1 r2 r3`` rows to
-    ``data/worms/<group>/<id>.txt``;
+    ``data/worms/{pool,dev}/<id>.txt`` and, for the hidden test worms, to
+    ``eval/test/worms/<id>.txt`` (their inputs are hidden too, so a submission
+    cannot fold them into its training data);
   * writes the names of pool and test rows to ``eval/test/keys.json`` and, for a
     fixed random 10 % of the identities only, the names of dev rows to
     ``eval/train/dev_labels.json`` (other dev rows are ``null``). Exposing every
@@ -69,7 +71,8 @@ def main() -> None:
     dev_labels: dict = {}
     cursor = 0
     for group, size in GROUP_SIZES.items():
-        out_dir = ROOT / "data" / "worms" / group
+        # hidden test inputs stay on the hidden side: a submission never sees them
+        out_dir = (ROOT / "eval" / "test" / "worms") if group == "test" else (ROOT / "data" / "worms" / group)
         out_dir.mkdir(parents=True, exist_ok=True)
         for stale in out_dir.glob("*.txt"):
             stale.unlink()
@@ -97,7 +100,7 @@ def main() -> None:
     (ROOT / "eval" / "test" / "keys.json").write_text(json.dumps(keys))
     (ROOT / "eval" / "train" / "dev_labels.json").write_text(json.dumps(
         {"note": "visible labels for a fixed 10% sample of identities; null = not labeled", "dev": dev_visible}))
-    print({g: sorted(p.stem for p in (ROOT / "data" / "worms" / g).glob("*.txt")) for g in GROUP_SIZES})
+    print({"pool": len(keys["pool"]), "dev": len(dev_visible), "test": len(keys["test"])})
 
 
 if __name__ == "__main__":
