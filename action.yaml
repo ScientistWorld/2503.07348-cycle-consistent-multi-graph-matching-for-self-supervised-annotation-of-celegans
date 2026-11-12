@@ -1,8 +1,6 @@
 # Once you set action to 'submit' or 'done', STOP immediately.
 # Do NOT sleep, poll, or wait for jobs. The system reads this file
 # only after your turn ends.
-action: submit
-gpus: 0
-test: false
+action: done
 milestone: core_claim
-notes: "Annotator layout: retrain reference seed 7 on final code, rebuild variants from checkpoints, freeze comparators, audit all cases via per-worm annotate.sh"
+notes: "Hardened gym: labels and hidden test inputs removed from visible files, per-worm annotator interface, paper-faithful pylibmgm reference 0.892 (seed range 0.4 pts), shrinkage variant +5-6 pts, all shortcuts fail or tie; see HARDENING.md"

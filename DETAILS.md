@@ -15,21 +15,31 @@ The task is to assign consistent biological names to hundreds of nuclei in 3D wo
 - Pipeline ablation: full pipeline atlas accuracy 0.972 +/- 0.015 on training-set ablations vs 0.955 +/- 0.031 for linear dense.
 - Robustness result with automatic StarDist segmentations: full unsupervised pipeline 0.809 +/- 0.147 atlas accuracy.
 
+## This gym
+
+12 unlabeled pool worms, 4 visible dev worms (10 % of identities labeled), 10 hidden test worms from the public Li et al. manual segmentations. Reference (paper's method, scaled): 0.892 hidden-test accuracy; frozen supervised comparator 0.917; unlearned baseline 0.798.
+
 ---
 
 # Problem Definition
 
 ## Research Question
 
-How can cell nuclei in 3D C. elegans microscopy images be assigned consistent biological identities across animals when manual semantic annotations are scarce or unavailable?
+How can the nuclei of a 3D C. elegans microscopy image be assigned their biological identities (one of 558 unique cell names) when no semantic annotation is available to build the identity reference?
 
 ## Why It Matters
 
-Cell-level identity maps let biologists compare gene expression and morphology across individual worms in a common reference frame. Manual annotation is slow and expert-dependent, so a good automatic solution removes a major bottleneck for high-throughput organism-scale studies.
+Cell-level identity maps let biologists compare gene expression and morphology across individual worms in a common reference frame. Expert annotation of every nucleus is slow and error-prone; a label-free way to obtain the identity reference removes a key bottleneck for organism-scale studies.
+
+## Setting
+
+- Every worm is given as a table of segmented nuclei (centroid and three ellipsoid radii, already rigidly aligned along the body axes). Row order carries no identity information.
+- 12 unlabeled pool worms are available to build an identity reference. No semantic name of any pool nucleus is available, and none may be obtained from outside the benchmark.
+- New worms must then be annotated one at a time by the system's own procedure: every nucleus receives a reference identity (or none), with no two nuclei of a worm sharing an identity.
 
 ## Success Criteria
 
-A successful system builds a reusable identity reference from segmented nuclei, assigns identities to held-out worms with high per-cell accuracy, remains close to an otherwise comparable supervised reference in accuracy, and does not use held-out labels during training or model selection.
+High per-nucleus identity accuracy on held-out worms, on every worm rather than only on average, achieved without semantic labels.
 
 ---
 
@@ -39,33 +49,42 @@ How the paper approaches the problem, i.e. the paper's core contributions.
 
 ## Key Contribution
 
-The paper introduces a fully unsupervised atlas-learning pipeline for C. elegans nuclei based on cycle-consistent multi-graph matching. It replaces manually annotated semantic cell labels with cycle-consistent cliques across worms, then builds a statistical atlas from those cliques.
+A fully unsupervised atlas-learning pipeline for C. elegans nuclei based on cycle-consistent multi-graph matching (MGM). Cycle-consistent cliques of corresponding nuclei across worms replace manual semantic labels; a Gaussian statistical atlas is built from them and matched to new worms.
 
 ## Approach
 
-Each worm is represented as a graph of segmented nuclei with 3D centroid and radii features. Pairwise worm-to-worm graph matching uses Gaussian/Mahalanobis unary costs for centroid and radii similarity plus quadratic costs for pairwise centroid offsets. The method learns diagonal Gaussian covariance and sparsity parameters through three-stage Bayesian optimization using a self-supervised cycle/synchronization loss over a subset of worms. After solving pairwise matches, a synchronization step produces cycle-consistent cliques. Clique labels are used only for evaluation; the atlas itself is built from the unlabeled clique geometry and then matched to target worms.
+Worms are graphs of nuclei with centroid and radii features. Worm-to-worm graph matching uses Mahalanobis unary costs (centroids, radii) and pairwise costs (centroid offsets between neighbouring nuclei) with cross-nucleus diagonal covariances, an unassignment constant and sparsification. The 12 parameters are learned with three-stage Bayesian optimisation (Optuna TPE) whose loss is the synchronisation objective: how well the independently solved pairwise matchings can be made cycle consistent (stage 1 linear covariances, stage 2 sparsity with a multi-objective trade-off against problem size, stage 3 offset covariances). Worms are re-aligned (affine, least squares from matchings) to a target worm before and after learning. The pool is matched pairwise (Fusion Moves) and synchronised densely into cliques (GREEDA); nucleus-specific Gaussian statistics of the cliques form the atlas, with cost weights derived from the learned covariances. New worms are re-aligned and matched to the atlas.
 
 ## Main Claims
 
-Primary: an unsupervised atlas built from instance segmentations can reach near-supervised C. elegans cell-annotation accuracy. Secondary: the learned Gaussian parameters, quadratic offset costs, synchronization loss, and explicit atlas construction improve over simpler linear or unlearned variants.
+Primary: an unsupervised atlas reaches near-supervised annotation accuracy (0.961 vs 0.964). Secondary: learned covariances, quadratic offset costs, the synchronisation loss and explicit atlas construction each help over simpler variants.
+
+## In this gym
+
+`method/cycle_mgm.py` (training) and `method/annotate.py` (per-worm annotation) implement this pipeline with the authors' solver library (pylibmgm), scaled to 12 pool worms, 6 learning worms and 30/30/10 BO trials.
 
 ---
 
 # Evaluation
 
-## Metrics
+## What a submission provides
 
-The primary metric is identity accuracy: the fraction of target nuclei assigned the correct biological name in held-out worms. Accuracy is reported as mean, minimum, and standard deviation over worms; higher mean/minimum and lower standard deviation are better.
+A directory `outputs/<method_name>/` (the ranked one is `outputs/our_unsupervised_atlas/`) containing
 
-The evaluator also reports invalid assignment rate, the fraction of predicted assignments that are missing, malformed, or point outside the target worm. The gap to a supervised oracle on the same split is a constraint metric: lower is better because the target is high identity accuracy without using semantic labels to build the unsupervised reference.
+- `predictions.json`: `{"pool_cliques": {"p00": [...], ..., "p11": [...]}}` — for every pool worm, one integer per row: the identity (group id) the system gives that nucleus, or `-1`. Within a worm an id may appear at most once.
+- `annotate.sh`: `bash annotate.sh <worm.txt> <labels.json>` reads ONE worm table (same format as `data/worms/*/*.txt`) and writes a JSON list with one identity id (an id used in `pool_cliques`) or `-1` per row, no id twice. It runs from `/home/user` inside the gym container, without internet, with a 900 s limit per call. Anything else the directory needs (e.g. model files) may live next to it.
 
-## Baselines and Targets
+## How it is scored
 
-Paper targets on the full 100-train/100-test manual-segmentation setting are: prior supervised reference 0.93 +/- 0.11, the paper's supervised reference 0.964 +/- 0.019, and the paper's label-free reference 0.961 +/- 0.020. Training-set diagnostic results in the paper range from roughly 0.955 to 0.972 atlas accuracy, depending on the system variant.
+Held-out worms are handed to `annotate.sh` one per call: the 4 dev worms (`data/worms/dev/`) by `scripts/evaluate_train.sh`, 10 hidden worms (never visible) by `scripts/evaluate_test.sh`. Both scripts take no arguments and score every directory under `outputs/` plus two frozen comparators.
 
-## Evaluation Protocol
+- Identity ids are turned into biological names by greedy maximum voting: hidden test — over the true names of the pool nuclei in each of the submission's pool groups; visible slice — leave-one-out over the other dev worms (only a fixed 10 % sample of identities is labeled there, and accuracy is measured on those nuclei). Unnamed ids count as wrong.
+- **Primary metric** `atlas_accuracy_mean`: mean over held-out worms of the fraction of nuclei assigned their true identity (unassigned = wrong). Also ranked: `atlas_accuracy_min` (worst worm). Diagnostics (not ranked): per-worm standard deviation, accuracy of the pool groups themselves (hidden side), and the gap to the frozen supervised comparator.
+- Any missing file, crash, timeout, malformed or duplicated assignment fails the run, which then receives the worst value of every metric. Nothing a submission writes besides its raw assignments is read.
 
-The default workspace benchmark uses the tracked preprocessed Li et al. sample: training worms in `data/cellmatch_sample/train` and test worms in `data/cellmatch_sample/test`. A submitted system should write a prediction artifact with one or more named methods under the documented JSON format, then `scripts/evaluate.sh <predictions.json>` scores that artifact. Evaluation code reads prediction artifacts only and does not import from any solution implementation.
+## Reference points
+
+Paper (100 training / 100 test worms): supervised reference 0.964 ± 0.019, label-free reference 0.961 ± 0.020, prior supervised method 0.93 ± 0.11. On this 12-worm benchmark the frozen supervised comparator (built with all pool names) scores 0.917 on the hidden worms and an unlearned label-free baseline 0.798.
 
 ---
 
@@ -367,6 +386,54 @@ The default workspace benchmark uses the tracked preprocessed Li et al. sample: 
 
 <details>
 <summary>Progress Log</summary>
+
+### [2026-06-02 23:19] - core_claim
+- CPU job `18a6816a-348` completed the stricter all-558-cell default reproduction and `python validate.py --compare` passed.
+- The unsupervised atlas reached 0.7386 +/- 0.1259 held-out atlas accuracy, beating the unlearned linear baseline at 0.6941 +/- 0.1150 while using no semantic labels for training.
+- The method stayed near the supervised oracle on the same all-cell held-out worms (`gap_to_supervised_oracle = 0.0600`) with zero invalid assignments, restoring `core_claim` for the label-free benchmark.
+
+### [2026-06-02 22:45] - method_runs
+- Removed semantic-label-dependent common-subset selection from the formal method and baseline paths.
+- Updated the default reproduction to use all 558 cells in each selected worm.
+- Scheduled a CPU job to regenerate predictions and scores before restoring `core_claim` or above for the stricter default.
+
+### [2026-06-02 22:34] - core_claim_plus
+- Final verification passed with `python validate.py --compare`.
+- Method-agnostic documentation, formal score metrics, baseline separation, and generated-artifact cleanup were tightened without changing the reproduced milestone.
+
+### [2026-06-02 22:08] - core_claim_plus
+- CPU job `fee0b427-5f9` completed the expanded audited Optuna/synchronization-loss probe on a 16-train/6-test/220-cell setting.
+- The unsupervised atlas reached 0.8424 +/- 0.1244 held-out atlas accuracy, beating the unlearned linear baseline at 0.7720 +/- 0.1599.
+- The same run stayed at/above the supervised oracle on this scaled split (`gap_to_supervised_oracle = -0.0030`) while using no semantic labels for training, restoring `core_claim_plus` under the audited implementation.
+
+### [2026-06-02 21:50] - core_claim
+- Continuing audit found that the previous implementation used staged random search for parameter learning, while the paper's method uses staged Bayesian optimization.
+- Replaced the learner with Optuna TPE Bayesian optimization for the paper's three stages and switched the default self-supervised objective to synchronization loss.
+- Local syntax checks and `python validate.py --compare` pass; a scheduled CPU job is needed before restoring `core_claim_plus` for the updated method.
+
+### [2026-06-02 21:58] - core_claim
+- CPU job `bd82a3e6-1a1` completed the updated Optuna/synchronization-loss default reproduction and `python validate.py --compare` passed.
+- Updated proposed unsupervised atlas reached 0.8729 +/- 0.0913 held-out atlas accuracy, beating the unlearned linear baseline at 0.7990 +/- 0.1381.
+- The unsupervised atlas used no semantic labels for training and stayed within 0.0021 of the supervised oracle on the scaled default setting.
+
+### [2026-06-02 21:49] - core_claim_plus
+- Default scaled reproduction completed in a scheduled CPU job and validates with `python validate.py --compare`.
+- Proposed unsupervised atlas reached 0.8656 +/- 0.0964 held-out atlas accuracy on the tracked public sample, beating the unlearned linear baseline at 0.7990 +/- 0.1381 while using no semantic labels for training.
+- Expanded 16-train/6-test/220-cell probe also completed and supported the same claim: unsupervised atlas 0.8598 +/- 0.0901 vs. unlearned linear baseline 0.7720 +/- 0.1599.
+
+</details>
+
+### Iteration 11: claude-opus-5-5 (hardener)
+- **Milestone**: `core_claim` | **Status**: done
+- **Working time**: 55m | **GPU**: 0.0h
+- **Jobs**: 5 total (5 completed, 0 failed)
+
+<details>
+<summary>Progress Log</summary>
+
+### [2026-11-12] - core_claim (hardening, final iteration)
+- Reference rebuilt as the paper's own pipeline on the authors' solver library (pylibmgm): realignment before/after BO, 3-stage BO with the synchronisation loss, Fusion Moves GM, dense GREEDA synchronisation, nucleus-specific Gaussian atlas. Hidden test (10 worms): 0.892 vs frozen supervised comparator 0.917 and unlearned baseline 0.798; seed range 0.38 points.
+- Labels and hidden test inputs removed from every visible file; submissions ship a per-worm annotator; failures score worst values. Atlas covariance shrinkage beats the reference by +4.9 to +5.9 points on every seed. See HARDENING.md.
 
 ### [2026-06-02 23:19] - core_claim
 - CPU job `18a6816a-348` completed the stricter all-558-cell default reproduction and `python validate.py --compare` passed.
