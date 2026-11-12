@@ -1,42 +1,88 @@
 {
   "_metadata": {
     "slice": "test",
-    "split_seed": 250307348,
-    "source_predictions": "outputs/method/predictions.json",
-    "matched_methods_from": "scoring/scores_train.json"
+    "target_worms": [
+      "t00",
+      "t01",
+      "t02",
+      "t03",
+      "t04",
+      "t05",
+      "t06",
+      "t07",
+      "t08",
+      "t09"
+    ],
+    "fixed_comparators": [
+      "supervised_oracle_atlas",
+      "unlearned_linear_baseline"
+    ],
+    "submitted_methods": [
+      "our_unsupervised_atlas"
+    ],
+    "ignored_reserved_names": [],
+    "failures": {},
+    "per_worm_accuracy": {
+      "supervised_oracle_atlas": {
+        "t00": 0.9354838709677419,
+        "t01": 0.9157706093189965,
+        "t02": 0.9551971326164874,
+        "t03": 0.8458781362007168,
+        "t04": 0.96415770609319,
+        "t05": 0.9014336917562724,
+        "t06": 0.8387096774193549,
+        "t07": 0.9229390681003584,
+        "t08": 0.9372759856630825,
+        "t09": 0.931899641577061
+      },
+      "unlearned_linear_baseline": {
+        "t00": 0.8136200716845878,
+        "t01": 0.7419354838709677,
+        "t02": 0.8691756272401434,
+        "t03": 0.6111111111111112,
+        "t04": 0.8745519713261649,
+        "t05": 0.6845878136200717,
+        "t06": 0.7204301075268817,
+        "t07": 0.8154121863799283,
+        "t08": 0.8046594982078853,
+        "t09": 0.8261648745519713
+      },
+      "our_unsupervised_atlas": {
+        "t00": 0.9175627240143369,
+        "t01": 0.8745519713261649,
+        "t02": 0.9336917562724014,
+        "t03": 0.8207885304659498,
+        "t04": 0.921146953405018,
+        "t05": 0.8405017921146953,
+        "t06": 0.8189964157706093,
+        "t07": 0.8799283154121864,
+        "t08": 0.9121863799283154,
+        "t09": 0.910394265232975
+      }
+    }
   },
   "experiments": {
     "scaled_manual_segmentation": {
-      "_slice": "test",
-      "_target_indices": [
-        3,
-        4,
-        5
-      ],
       "results": {
+        "supervised_oracle_atlas": {
+          "atlas_accuracy_mean": 0.9148745519713263,
+          "atlas_accuracy_min": 0.8387096774193549,
+          "atlas_accuracy_std": 0.04009894174950887,
+          "pre_atlas_accuracy_mean": 1.0
+        },
         "unlearned_linear_baseline": {
-          "atlas_accuracy_mean": 0.6583034647550777,
-          "atlas_accuracy_min": 0.4659498207885305,
-          "atlas_accuracy_std": 0.13602243671661465,
-          "invalid_assignment_rate": 0.0,
-          "gap_to_supervised_oracle": 0.11170848267622446
+          "atlas_accuracy_mean": 0.7761648745519715,
+          "atlas_accuracy_min": 0.6111111111111112,
+          "atlas_accuracy_std": 0.08030773694930093,
+          "pre_atlas_accuracy_mean": 0.8773894862604541,
+          "gap_to_supervised_oracle": 0.1387096774193548
         },
         "our_unsupervised_atlas": {
-          "atlas_accuracy_mean": 0.7037037037037037,
-          "atlas_accuracy_min": 0.496415770609319,
-          "atlas_accuracy_std": 0.14854986580444596,
-          "invalid_assignment_rate": 0.0,
-          "pre_atlas_accuracy_mean": 0.8142174432497012,
-          "pre_atlas_accuracy_std": 0.09728265175504103,
-          "atlas_minus_preatlas": -0.11051373954599752,
-          "gap_to_supervised_oracle": 0.06630824372759847,
-          "semantic_labels_used_for_training": 0.0
-        },
-        "supervised_oracle_atlas": {
-          "atlas_accuracy_mean": 0.7700119474313022,
-          "atlas_accuracy_min": 0.546594982078853,
-          "atlas_accuracy_std": 0.15797965123283678,
-          "invalid_assignment_rate": 0.0
+          "atlas_accuracy_mean": 0.8829749103942653,
+          "atlas_accuracy_min": 0.8189964157706093,
+          "atlas_accuracy_std": 0.0408354480682973,
+          "pre_atlas_accuracy_mean": 0.9236857825567504,
+          "gap_to_supervised_oracle": 0.03189964157706093
         }
       }
     }
