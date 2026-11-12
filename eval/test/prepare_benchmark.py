@@ -16,8 +16,11 @@ The script
   * shuffles the rows of every worm with a fixed per-worm permutation and drops
     the index and name columns, writing ``x y z r1 r2 r3`` rows to
     ``data/worms/<group>/<id>.txt``;
-  * writes the names of pool and test rows to ``eval/test/keys.json`` and the
-    names of dev rows to ``eval/train/dev_labels.json``.
+  * writes the names of pool and test rows to ``eval/test/keys.json`` and, for a
+    fixed random 10 % of the identities only, the names of dev rows to
+    ``eval/train/dev_labels.json`` (other dev rows are ``null``). Exposing every
+    dev label would let a submission build a supervised atlas from the visible
+    slice; a 10 % identity sample still estimates the same per-nucleus accuracy.
 
 Pure Python (no numpy) so it is cheap to rerun:
     python eval/test/prepare_benchmark.py --source <cellmatch>/testdata
@@ -32,6 +35,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SPLIT_SEED = 250307348
 GROUP_SIZES = {"pool": 12, "dev": 4, "test": 10}
+DEV_LABELED_IDENTITIES = 56  # ~10 % of the 558 identities carry a visible dev label
 PREFIX = {"pool": "p", "dev": "d", "test": "t"}
 
 
@@ -87,8 +91,12 @@ def main() -> None:
             else:
                 keys[group][worm_id] = names
 
+    vocab = sorted(set().union(*map(set, dev_labels.values())))
+    visible = set(random.Random(f"{SPLIT_SEED}-dev-identities").sample(vocab, DEV_LABELED_IDENTITIES))
+    dev_visible = {w: [n if n in visible else None for n in names] for w, names in dev_labels.items()}
     (ROOT / "eval" / "test" / "keys.json").write_text(json.dumps(keys))
-    (ROOT / "eval" / "train" / "dev_labels.json").write_text(json.dumps({"dev": dev_labels}))
+    (ROOT / "eval" / "train" / "dev_labels.json").write_text(json.dumps(
+        {"note": "visible labels for a fixed 10% sample of identities; null = not labeled", "dev": dev_visible}))
     print({g: sorted(p.stem for p in (ROOT / "data" / "worms" / g).glob("*.txt")) for g in GROUP_SIZES})
 
 

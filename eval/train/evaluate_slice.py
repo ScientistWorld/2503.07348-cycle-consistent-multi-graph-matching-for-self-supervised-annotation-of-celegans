@@ -7,12 +7,16 @@ outputs/ (each holding predictions.json) plus the fixed comparators in
 eval/train/fixed/. The entry ``our_unsupervised_atlas`` is always emitted; a
 missing, unreadable or invalid artifact scores the worst value of every metric.
 
-Because the pool's names are not available on this side, atlas labels are
+Only a fixed random 10 % of the identities carry a visible dev label (the
+others are null); accuracy is measured on those labeled nuclei, an unbiased
+sample of the per-nucleus accuracy. Because the pool's names are not available
+on this side, atlas labels are
 named leave-one-out: to score dev worm d, every atlas label is named by greedy
 maximum voting over the true names of the nuclei it was assigned to in the
 other three dev worms (largest count first, each label and each name used
 once). Atlas accuracy of d = fraction of its nuclei whose label carries their
-true name; unassigned nuclei count as wrong. The hidden test instead names the
+true name, over d's labeled nuclei; unassigned nuclei count as wrong. The
+hidden test instead names the
 atlas labels from the pool cliques, so a method whose held-out labels are
 consistent with each other but not with its own pool cliques scores higher
 here than on the hidden test. The dev labels are for scoring only: using them to build,
@@ -68,7 +72,7 @@ def greedy_names(labels: dict, dev: dict) -> dict:
     votes: Counter = Counter()
     for w, lab in labels.items():
         for node, k in enumerate(lab):
-            if k >= 0:
+            if k >= 0 and dev[w][node] is not None:
                 votes[(k, dev[w][node])] += 1
     names: dict = {}
     used: set = set()
@@ -93,7 +97,9 @@ def dev_scores(pred, dev: dict, sizes: dict | None) -> tuple[dict, dict]:
     for scored in sorted(labels):
         names = greedy_names({w: lab for w, lab in labels.items() if w != scored}, dev)
         lab = labels[scored]
-        acc[scored] = sum(1 for node, k in enumerate(lab) if k >= 0 and names.get(k) == dev[scored][node]) / len(lab)
+        truth = dev[scored]
+        labeled = [node for node, name in enumerate(truth) if name is not None]
+        acc[scored] = sum(1 for node in labeled if lab[node] >= 0 and names.get(lab[node]) == truth[node]) / len(labeled)
     values = list(acc.values())
     mean = sum(values) / len(values)
     return {
@@ -106,8 +112,17 @@ def dev_scores(pred, dev: dict, sizes: dict | None) -> tuple[dict, dict]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", default=str(ROOT / "scoring" / "scores_train.json"))
+    parser.add_argument("--freeze", nargs=2, metavar=("NAME", "LABELINGS"),
+                        help="score a comparator's dev labelings once and store only the numbers in fixed/NAME.json")
     args = parser.parse_args()
     dev = json.loads((HERE / "dev_labels.json").read_text())["dev"]
+    if args.freeze:
+        name, src = args.freeze
+        metrics, acc = dev_scores(json.loads(Path(src).read_text()), dev, None)
+        FIXED.mkdir(parents=True, exist_ok=True)
+        (FIXED / f"{name}.json").write_text(json.dumps({"frozen_metrics": metrics, "per_worm": acc}, indent=2))
+        print(f"froze {name}: {metrics}")
+        return
     sizes = pool_sizes()
     fixed = {p.stem: p for p in sorted(FIXED.glob("*.json"))}
     submitted = {}
@@ -126,7 +141,12 @@ def main() -> None:
                 raise ValueError(f"{path.relative_to(ROOT)} not found")
             if path.stat().st_size > MAX_BYTES:
                 raise ValueError("predictions file too large")
-            metrics, acc = dev_scores(json.loads(path.read_text()), dev, check_sizes)
+            content = json.loads(path.read_text())
+            if check_sizes is None and isinstance(content, dict) and "frozen_metrics" in content:
+                # fixed comparator frozen by the hidden side (its raw labels would leak supervision)
+                metrics, acc = dict(content["frozen_metrics"]), content.get("per_worm", {})
+            else:
+                metrics, acc = dev_scores(content, dev, check_sizes)
             per_worm[name] = acc
         except Exception as exc:
             metrics = dict(WORST)

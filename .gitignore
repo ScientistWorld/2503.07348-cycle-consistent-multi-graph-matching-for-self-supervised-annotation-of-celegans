@@ -72,7 +72,7 @@ outputs/*
 !outputs/our_unsupervised_atlas/
 outputs/our_unsupervised_atlas/*
 !outputs/our_unsupervised_atlas/predictions.json
-hardening/runs/*/work/
+hardening/runs/
 logs/
 jobs/
 .venv/

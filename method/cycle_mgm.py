@@ -380,6 +380,9 @@ def run(args: argparse.Namespace) -> None:
     mgm_params.w_cen, mgm_params.w_rad, mgm_params.w_off = ablate
     mgm_path = work / f"mgm_{args.lambda_scale.replace(',', '_')}.json"
     pool = groups["pool"]
+    if args.transductive:  # SHORTCUT diagnostic: also put the held-out test worms into the MGM / atlas
+        mgm_path = mgm_path.with_name("transductive_" + mgm_path.name)
+        pool = pool + groups["test"]
     sizes = [w.n for w in pool]
     if mgm_path.exists():
         membership = [np.asarray(m, dtype=int) for m in json.loads(mgm_path.read_text())["membership"]]
@@ -409,9 +412,10 @@ def run(args: argparse.Namespace) -> None:
     labelings = annotate(atlas, groups["dev"] + groups["test"], params, quadratic, seed=args.seed + 3)
     log(f"annotated {len(labelings)} held-out worms ({time.time() - t0:.0f}s)")
 
+    pool_ids = {w.worm_id for w in groups["pool"]}
     output = {
         "format": "cellid-atlas-v1",
-        "pool_cliques": {w.worm_id: m.tolist() for w, m in zip(pool, membership)},
+        "pool_cliques": {w.worm_id: m.tolist() for w, m in zip(pool, membership) if w.worm_id in pool_ids},
         "labelings": {k: v.tolist() for k, v in labelings.items()},
         "info": {
             "method": "cycle-consistent MGM + BO (synchronisation loss) unsupervised atlas",
@@ -453,6 +457,8 @@ def main() -> None:
                         help="re-alignment iterations per round (paper: 7; lower only for smoke tests)")
     parser.add_argument("--atlas-shrinkage", type=float, default=0.0)
     parser.add_argument("--atlas-refine", type=int, default=0)
+    parser.add_argument("--transductive", action="store_true",
+                        help="audit only: include the held-out test worms in the multi-graph matching (not allowed)")
     run(parser.parse_args())
 
 

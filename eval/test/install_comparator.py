@@ -3,14 +3,16 @@
     python eval/test/install_comparator.py <name> <predictions.json>
 
 Writes eval/test/fixed/<name>.json (pool cliques + hidden-test labelings) and
-eval/train/fixed/<name>.json (dev labelings only; pool cliques are never written
-to the visible side because a supervised comparator's cliques are the hidden
-pool labels).
+eval/train/fixed/<name>.json. The visible side only receives the comparator's
+scores, computed once by eval/train/evaluate_slice.py --freeze: a supervised
+comparator's raw dev labelings would hand out supervised correspondences.
 """
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -27,11 +29,17 @@ def main() -> None:
         "info": pred.get("info", {}),
     }
     dev_part = {"labelings": {w: pred["labelings"][w] for w in dev_ids}, "info": pred.get("info", {})}
-    for side, part in (("test", test_part), ("train", dev_part)):
-        out = ROOT / "eval" / side / "fixed" / f"{name}.json"
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(json.dumps(part))
-        print(f"installed {out}")
+    out = ROOT / "eval" / "test" / "fixed" / f"{name}.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(test_part))
+    print(f"installed {out}")
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as handle:
+        json.dump(dev_part, handle)
+    try:
+        subprocess.run([sys.executable, str(ROOT / "eval" / "train" / "evaluate_slice.py"), "--freeze", name,
+                        handle.name], check=True)
+    finally:
+        Path(handle.name).unlink()
 
 
 if __name__ == "__main__":

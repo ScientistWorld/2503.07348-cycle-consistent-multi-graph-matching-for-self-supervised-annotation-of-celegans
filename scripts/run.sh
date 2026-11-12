@@ -1,6 +1,7 @@
 #!/bin/bash
-# Final hardening job: reference (3 seeds), fixed comparators, better/weaker
-# variants and shortcuts, all scored through the no-argument evaluation scripts.
+# Hardening pipeline: reference (3 seeds), fixed comparators, better/weaker
+# variants, shortcuts and diagnostics, all scored through the no-argument
+# evaluation scripts. Reproduces the gym's reference end to end (~3 h on 1 CPU).
 # Every stage skips work whose output already exists, so a rerun resumes.
 cd /home/user
 export PYTHONUNBUFFERED=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
@@ -26,8 +27,10 @@ run reference_seed8 12000 nice -n 10 env GYM_WORKERS=2 python -m method.cycle_mg
   --output hardening/runs/reference_seed8/predictions.json $REF &
 run reference_seed9 12000 nice -n 10 env GYM_WORKERS=2 python -m method.cycle_mgm --seed 9 --work checkpoints/ref_seed9 \
   --output hardening/runs/reference_seed9/predictions.json $REF &
-run supervised_oracle 12000 nice -n 5 env GYM_WORKERS=2 python -m eval.test.supervised_oracle \
-  --output hardening/runs/supervised_oracle/predictions.json &
+if [ ! -f eval/test/oracle/predictions.json ]; then  # hidden side: uses the pool's names
+  timeout 12000 nice -n 5 env GYM_WORKERS=2 python -m eval.test.supervised_oracle \
+    --output eval/test/oracle/predictions.json > logs/supervised_oracle.log 2>&1 || echo "oracle FAILED" &
+fi
 wait
 date
 
@@ -51,20 +54,35 @@ run weaker_radii_only_seed7 5400 env GYM_WORKERS=1 $V --seed 7 --lambda-scale 0,
 run weaker_unlearned_quadratic_seed7 5400 nice -n 10 env GYM_WORKERS=2 $V --seed 7 --mode unlearned_quadratic \
   --work checkpoints/unlq_s7 --reuse $S7 --reuse-stages prealign \
   --output hardening/runs/weaker_unlearned_quadratic_seed7/predictions.json &
-run shortcut_supervised_dev 5400 env GYM_WORKERS=1 python -m hardening.supervised_dev --work $S7 \
-  --output hardening/runs/shortcut_supervised_dev/predictions.json &
+wait
+date
+
+# Stage D: shortcut / diagnostic follow-ups (after restricting visible dev labels).
+#   - supervised atlas from the (now 10 %) visible dev labels, alone and as a hybrid override
+#   - transductive MGM that also puts the visible test inputs into the atlas (forbidden)
+#   - the reference with twice the BO search (is the reference budget-limited?)
+run shortcut_supervised_dev_subset 5400 env GYM_WORKERS=1 python -m hardening.supervised_dev --work $S7 \
+  --mode full --output hardening/runs/shortcut_supervised_dev_subset/predictions.json &
+run shortcut_supervised_dev_hybrid 5400 env GYM_WORKERS=1 python -m hardening.supervised_dev --work $S7 \
+  --mode hybrid --reference hardening/runs/reference_seed7/predictions.json \
+  --output hardening/runs/shortcut_supervised_dev_hybrid/predictions.json &
+run shortcut_transductive_mgm 9000 env GYM_WORKERS=2 $V --seed 7 --transductive --work checkpoints/transductive_s7 \
+  --reuse $S7 --reuse-stages prealign,bo,postalign --output hardening/runs/shortcut_transductive_mgm/predictions.json &
+run diag_more_bo_seed7 9000 env GYM_WORKERS=2 python -m method.cycle_mgm --seed 7 --learn-worms 6 --trials 60,60,20 \
+  --work checkpoints/more_bo_s7 --reuse $S7 --reuse-stages prealign \
+  --output hardening/runs/diag_more_bo_seed7/predictions.json &
 wait
 date
 
 # Stage C: freeze comparators, install the reference, score everything.
-python eval/test/install_comparator.py supervised_oracle_atlas hardening/runs/supervised_oracle/predictions.json
+python eval/test/install_comparator.py supervised_oracle_atlas eval/test/oracle/predictions.json
 python eval/test/install_comparator.py unlearned_linear_baseline hardening/runs/unlearned_linear_baseline/predictions.json
 mkdir -p outputs/our_unsupervised_atlas
 cp hardening/runs/reference_seed7/predictions.json outputs/our_unsupervised_atlas/predictions.json
 rm -rf hardening/cases
 for d in hardening/runs/*/; do
   name=$(basename "$d"); kind=variant
-  case $name in shortcut_*) kind=shortcut;; supervised_oracle) continue;; esac
+  case $name in shortcut_*) kind=shortcut;; diag_*) kind=diagnostic;; esac
   python -m hardening.audit variant "$name" "$d/predictions.json" --kind $kind
 done
 for s in shortcut_identity_rows shortcut_empty_object shortcut_missing_predictions shortcut_null_predictions \
@@ -78,4 +96,9 @@ bash scripts/evaluate_test.sh > logs/final_test.log 2>&1
 bash scripts/evaluate.sh > logs/final_scores.log 2>&1
 python -m hardening.audit summarize
 python validate.py --post-design || echo "VALIDATE FAILED"
+# Predictions whose label ids encode names (supervised shortcuts) must not stay on disk.
+rm -f hardening/runs/shortcut_supervised_dev_all_labels_before_fix/predictions.json \
+      hardening/runs/shortcut_supervised_dev_subset/predictions.json
+mkdir -p hardening/logs
+for f in logs/*.log; do grep -v -E '^([0-9]+/[0-9]+ ?)+$' "$f" | sed -E 's/([0-9]+\/[0-9]+ )+//g' > "hardening/logs/$(basename "$f")"; done
 date
