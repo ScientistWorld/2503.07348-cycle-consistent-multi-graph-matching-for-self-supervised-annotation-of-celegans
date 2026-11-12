@@ -1,0 +1,24 @@
+{
+  "name": "shortcut_null_method",
+  "test_command": [
+    "bash",
+    "scripts/evaluate_test.sh"
+  ],
+  "argv_extra": [],
+  "changes_to_eval_or_environment": false,
+  "input_sha256": "d969ff4362136e8d53564347b4f4ddbc376bdf043a4cde3daa66f7c7539b675c",
+  "methods_on_disk": {
+    "scaled_manual_segmentation": [
+      "unlearned_linear_baseline",
+      "our_unsupervised_atlas",
+      "supervised_oracle_atlas"
+    ]
+  },
+  "train_returncode": 1,
+  "train_output_written": false,
+  "train_error": "eval/train: 'NoneType' object has no attribute 'get'\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/home/user/eval/train/evaluate_slice.py\", line 187, in <module>\n    main()\n  File \"/home/user/eval/train/evaluate_slice.py\", line 166, in main\n    validate_experiment(exp_name, exp, len(ground_truth_labels))\n  File \"/home/user/eval/train/evaluate_slice.py\", line 90, in validate_experiment\n    labelings = method.get(\"test_labelings\")\n                ^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'get'\n",
+  "test_returncode": 1,
+  "test_output_written": false,
+  "test_error": "eval/test: 'NoneType' object has no attribute 'get'\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/home/user/eval/test/evaluate_slice.py\", line 233, in <module>\n    main()\n  File \"/home/user/eval/test/evaluate_slice.py\", line 206, in main\n    validate_experiment(exp_name, exp, len(ground_truth_labels))\n  File \"/home/user/eval/test/evaluate_slice.py\", line 90, in validate_experiment\n    labelings = method.get(\"test_labelings\")\n                ^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'get'\n",
+  "elapsed_seconds": 0.8139506510051433
+}

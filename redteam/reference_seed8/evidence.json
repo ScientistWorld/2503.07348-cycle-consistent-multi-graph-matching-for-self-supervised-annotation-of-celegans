@@ -1,0 +1,29 @@
+{
+  "name": "reference_seed8",
+  "test_command": [
+    "bash",
+    "scripts/evaluate_test.sh"
+  ],
+  "argv_extra": [],
+  "changes_to_eval_or_environment": false,
+  "input_sha256": "ba5722e1e9192cd5845502f0793399511e925b5d8807905d901e6409633ba20b",
+  "methods_on_disk": {
+    "scaled_manual_segmentation": [
+      "unlearned_linear_baseline",
+      "our_unsupervised_atlas",
+      "supervised_oracle_atlas"
+    ]
+  },
+  "train_returncode": 0,
+  "train_output_written": true,
+  "test_returncode": 0,
+  "test_output_written": true,
+  "methods_in_test_results": {
+    "scaled_manual_segmentation": [
+      "unlearned_linear_baseline",
+      "our_unsupervised_atlas",
+      "supervised_oracle_atlas"
+    ]
+  },
+  "elapsed_seconds": 55.263822519016685
+}

@@ -1,0 +1,41 @@
+{
+  "_metadata": {
+    "slice": "test",
+    "split_seed": 250307348,
+    "source_predictions": "outputs/method/predictions.json",
+    "matched_methods_from": "scoring/scores_train.json"
+  },
+  "experiments": {
+    "scaled_manual_segmentation": {
+      "_slice": "test",
+      "_target_indices": [
+        3,
+        4,
+        5
+      ],
+      "results": {
+        "unlearned_linear_baseline": {
+          "atlas_accuracy_mean": 0.6583034647550777,
+          "atlas_accuracy_min": 0.4659498207885305,
+          "atlas_accuracy_std": 0.13602243671661465,
+          "invalid_assignment_rate": 0.0,
+          "gap_to_supervised_oracle": -0.6583034647550777
+        },
+        "our_unsupervised_atlas": {
+          "atlas_accuracy_mean": 0.0,
+          "atlas_accuracy_min": 0.0,
+          "atlas_accuracy_std": 0.0,
+          "invalid_assignment_rate": 0.0,
+          "gap_to_supervised_oracle": 0.0,
+          "semantic_labels_used_for_training": -1000000.0
+        },
+        "supervised_oracle_atlas": {
+          "atlas_accuracy_mean": 0.0,
+          "atlas_accuracy_min": 0.0,
+          "atlas_accuracy_std": 0.0,
+          "invalid_assignment_rate": 0.0
+        }
+      }
+    }
+  }
+}

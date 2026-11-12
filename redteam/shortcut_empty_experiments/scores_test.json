@@ -1,0 +1,9 @@
+{
+  "_metadata": {
+    "slice": "test",
+    "split_seed": 250307348,
+    "source_predictions": "outputs/method/predictions.json",
+    "matched_methods_from": "scoring/scores_train.json"
+  },
+  "experiments": {}
+}

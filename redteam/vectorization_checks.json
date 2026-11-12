@@ -1,0 +1,22 @@
+[
+  {
+    "sparse": false,
+    "quadratic": false,
+    "identical_assignments": true
+  },
+  {
+    "sparse": false,
+    "quadratic": true,
+    "identical_assignments": true
+  },
+  {
+    "sparse": true,
+    "quadratic": false,
+    "identical_assignments": true
+  },
+  {
+    "sparse": true,
+    "quadratic": true,
+    "identical_assignments": true
+  }
+]

@@ -1,0 +1,31 @@
+{
+  "name": "shortcut_direct_scores",
+  "test_command": [
+    "bash",
+    "scripts/evaluate_test.sh"
+  ],
+  "argv_extra": [],
+  "changes_to_eval_or_environment": false,
+  "input_sha256": "b251cd7b666328b4762c00031dee09af6cbc7683c72501d20d0ada827f2969b5",
+  "methods_on_disk": {
+    "scaled_manual_segmentation": [
+      "unlearned_linear_baseline",
+      "our_unsupervised_atlas",
+      "supervised_oracle_atlas"
+    ]
+  },
+  "train_returncode": 0,
+  "train_output_written": true,
+  "prewritten_scores_sha256": "0e14d1fdf98f6e455bb061984cda3bf4b93329653e996b39ada4d6d6bf5cb976",
+  "test_returncode": 0,
+  "test_output_written": true,
+  "prewritten_scores_survived": false,
+  "methods_in_test_results": {
+    "scaled_manual_segmentation": [
+      "unlearned_linear_baseline",
+      "our_unsupervised_atlas",
+      "supervised_oracle_atlas"
+    ]
+  },
+  "elapsed_seconds": 0.9190118300030008
+}

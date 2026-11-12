@@ -1,0 +1,982 @@
+{
+  "reference": {
+    "atlas_accuracy_mean": 0.7037037037037037,
+    "atlas_accuracy_min": 0.496415770609319,
+    "atlas_accuracy_std": 0.14854986580444596,
+    "invalid_assignment_rate": 0.0,
+    "pre_atlas_accuracy_mean": 0.8142174432497012,
+    "pre_atlas_accuracy_std": 0.09728265175504103,
+    "atlas_minus_preatlas": -0.11051373954599752,
+    "gap_to_supervised_oracle": 0.06630824372759847,
+    "semantic_labels_used_for_training": 0.0
+  },
+  "normalization": "population std across successful audited attempts, missing values excluded",
+  "metric_std": {
+    "atlas_accuracy_mean": 0.34136752552244737,
+    "atlas_accuracy_min": 0.3106671109526632,
+    "atlas_accuracy_std": 0.12431451552953005,
+    "invalid_assignment_rate": 0.2712931993250107,
+    "gap_to_supervised_oracle": 0.4495242398555572,
+    "semantic_labels_used_for_training": 271293.18752972473
+  },
+  "attempts": {
+    "better_alignment": {
+      "metrics": {
+        "atlas_accuracy_mean": 0.7891278375149343,
+        "atlas_accuracy_min": 0.6899641577060932,
+        "atlas_accuracy_std": 0.07228442781412672,
+        "invalid_assignment_rate": 0.0,
+        "pre_atlas_accuracy_mean": 0.871415770609319,
+        "pre_atlas_accuracy_std": 0.047172263694116846,
+        "atlas_minus_preatlas": -0.08228793309438465,
+        "gap_to_supervised_oracle": -0.019115890083632125,
+        "semantic_labels_used_for_training": 0.0
+      },
+      "audit_cohort_rank_gain": 0.5623581235160997,
+      "contributions": {
+        "atlas_accuracy_mean": 0.2502409497813035,
+        "atlas_accuracy_min": 0.15575223468559038,
+        "atlas_accuracy_std": 0.06134877947716646,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": 0.09501615957203932,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": 0.0854241338112306,
+        "atlas_accuracy_min": 0.1935483870967742,
+        "atlas_accuracy_std": 0.07626543799031923,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": 0.0854241338112306,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": true,
+      "strictly_dominates_reference_on_reported_metrics": true,
+      "missing_scored_metrics": []
+    },
+    "better_training24": {
+      "metrics": {
+        "atlas_accuracy_mean": 0.7652329749103943,
+        "atlas_accuracy_min": 0.5698924731182796,
+        "atlas_accuracy_std": 0.13812853108383433,
+        "invalid_assignment_rate": 0.0,
+        "pre_atlas_accuracy_mean": 0.8521505376344085,
+        "pre_atlas_accuracy_std": 0.09301316976714466,
+        "atlas_minus_preatlas": -0.08691756272401419,
+        "gap_to_supervised_oracle": 0.004778972520907865,
+        "semantic_labels_used_for_training": 0.0
+      },
+      "audit_cohort_rank_gain": 0.31619289663994604,
+      "contributions": {
+        "atlas_accuracy_mean": 0.18024348131100892,
+        "atlas_accuracy_min": 0.059128163167677855,
+        "atlas_accuracy_std": 0.00838303932265747,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": 0.06843821283860178,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": 0.061529271206690606,
+        "atlas_accuracy_min": 0.0734767025089606,
+        "atlas_accuracy_std": 0.01042133472061163,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": 0.061529271206690606,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": true,
+      "strictly_dominates_reference_on_reported_metrics": true,
+      "missing_scored_metrics": []
+    },
+    "reference": {
+      "metrics": {
+        "atlas_accuracy_mean": 0.7037037037037037,
+        "atlas_accuracy_min": 0.496415770609319,
+        "atlas_accuracy_std": 0.14854986580444596,
+        "invalid_assignment_rate": 0.0,
+        "pre_atlas_accuracy_mean": 0.8142174432497012,
+        "pre_atlas_accuracy_std": 0.09728265175504103,
+        "atlas_minus_preatlas": -0.11051373954599752,
+        "gap_to_supervised_oracle": 0.06630824372759847,
+        "semantic_labels_used_for_training": 0.0
+      },
+      "audit_cohort_rank_gain": 0.0,
+      "contributions": {
+        "atlas_accuracy_mean": 0.0,
+        "atlas_accuracy_min": 0.0,
+        "atlas_accuracy_std": -0.0,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.0,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": 0.0,
+        "atlas_accuracy_min": 0.0,
+        "atlas_accuracy_std": -0.0,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.0,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": true,
+      "strictly_dominates_reference_on_reported_metrics": false,
+      "missing_scored_metrics": []
+    },
+    "reference_seed7": {
+      "metrics": {
+        "atlas_accuracy_mean": 0.7037037037037037,
+        "atlas_accuracy_min": 0.496415770609319,
+        "atlas_accuracy_std": 0.14854986580444596,
+        "invalid_assignment_rate": 0.0,
+        "pre_atlas_accuracy_mean": 0.8142174432497012,
+        "pre_atlas_accuracy_std": 0.09728265175504103,
+        "atlas_minus_preatlas": -0.11051373954599752,
+        "gap_to_supervised_oracle": 0.06630824372759847,
+        "semantic_labels_used_for_training": 0.0
+      },
+      "audit_cohort_rank_gain": 0.0,
+      "contributions": {
+        "atlas_accuracy_mean": 0.0,
+        "atlas_accuracy_min": 0.0,
+        "atlas_accuracy_std": -0.0,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.0,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": 0.0,
+        "atlas_accuracy_min": 0.0,
+        "atlas_accuracy_std": -0.0,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.0,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": true,
+      "strictly_dominates_reference_on_reported_metrics": false,
+      "missing_scored_metrics": []
+    },
+    "reference_seed8": {
+      "metrics": {
+        "atlas_accuracy_mean": 0.7980884109916367,
+        "atlas_accuracy_min": 0.6129032258064516,
+        "atlas_accuracy_std": 0.13101925986862847,
+        "invalid_assignment_rate": 0.0,
+        "pre_atlas_accuracy_mean": 0.8649940262843488,
+        "pre_atlas_accuracy_std": 0.09155096848264098,
+        "atlas_minus_preatlas": -0.0669056152927121,
+        "gap_to_supervised_oracle": -0.028076463560334552,
+        "semantic_labels_used_for_training": 0.0
+      },
+      "audit_cohort_rank_gain": 0.4893144782934454,
+      "contributions": {
+        "atlas_accuracy_mean": 0.27649000045766375,
+        "atlas_accuracy_min": 0.0937397708755868,
+        "atlas_accuracy_std": 0.014101817363116548,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": 0.10498288959707831,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": 0.09438470728793302,
+        "atlas_accuracy_min": 0.1164874551971326,
+        "atlas_accuracy_std": 0.017530605935817484,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": 0.09438470728793302,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": true,
+      "strictly_dominates_reference_on_reported_metrics": true,
+      "missing_scored_metrics": []
+    },
+    "reference_seed9": {
+      "metrics": {
+        "atlas_accuracy_mean": 0.7001194743130227,
+        "atlas_accuracy_min": 0.4767025089605735,
+        "atlas_accuracy_std": 0.1601602073587566,
+        "invalid_assignment_rate": 0.0,
+        "pre_atlas_accuracy_mean": 0.8143667861409797,
+        "pre_atlas_accuracy_std": 0.08106375609691076,
+        "atlas_minus_preatlas": -0.114247311827957,
+        "gap_to_supervised_oracle": 0.06989247311827951,
+        "semantic_labels_used_for_training": 0.0
+      },
+      "audit_cohort_rank_gain": -0.03968945565880951,
+      "contributions": {
+        "atlas_accuracy_mean": -0.010499620270544302,
+        "atlas_accuracy_min": -0.01586365353279163,
+        "atlas_accuracy_std": -0.009339489845457906,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.003986692010015673,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": -0.0035842293906810374,
+        "atlas_accuracy_min": -0.01971326164874554,
+        "atlas_accuracy_std": -0.01161034155431065,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.0035842293906810374,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": false,
+      "strictly_dominates_reference_on_reported_metrics": false,
+      "missing_scored_metrics": []
+    },
+    "shortcut_bruteforce_exemplars": {
+      "metrics": {
+        "atlas_accuracy_mean": 0.578853046594982,
+        "atlas_accuracy_min": 0.460573476702509,
+        "atlas_accuracy_std": 0.10043306662580172,
+        "invalid_assignment_rate": 0.0,
+        "gap_to_supervised_oracle": 0.19115890083632014,
+        "semantic_labels_used_for_training": 0.0
+      },
+      "audit_cohort_rank_gain": -0.4947438542884801,
+      "contributions": {
+        "atlas_accuracy_mean": -0.36573677275728983,
+        "atlas_accuracy_min": -0.028843006423257486,
+        "atlas_accuracy_std": 0.03870569657427852,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.13886977168221135,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": -0.12485065710872167,
+        "atlas_accuracy_min": -0.03584229390681004,
+        "atlas_accuracy_std": 0.04811679917864424,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.12485065710872167,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": false,
+      "strictly_dominates_reference_on_reported_metrics": false,
+      "missing_scored_metrics": []
+    },
+    "shortcut_claimed_scores": {
+      "metrics": {
+        "atlas_accuracy_mean": 0.0,
+        "atlas_accuracy_min": 0.0,
+        "atlas_accuracy_std": 0.0,
+        "invalid_assignment_rate": 0.0,
+        "gap_to_supervised_oracle": 0.7700119474313022,
+        "semantic_labels_used_for_training": 0.0
+      },
+      "audit_cohort_rank_gain": -3.1241264272953466,
+      "contributions": {
+        "atlas_accuracy_mean": -2.0614254464501784,
+        "atlas_accuracy_min": -0.39947563896211613,
+        "atlas_accuracy_std": 0.11949518941668479,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.7827205312997364,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": -0.7037037037037037,
+        "atlas_accuracy_min": -0.496415770609319,
+        "atlas_accuracy_std": 0.14854986580444596,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.7037037037037037,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": false,
+      "strictly_dominates_reference_on_reported_metrics": false,
+      "missing_scored_metrics": []
+    },
+    "shortcut_constant_outputs": {
+      "metrics": {
+        "atlas_accuracy_mean": 0.0,
+        "atlas_accuracy_min": 0.0,
+        "atlas_accuracy_std": 0.0,
+        "invalid_assignment_rate": 0.0,
+        "gap_to_supervised_oracle": 0.7700119474313022,
+        "semantic_labels_used_for_training": 0.0
+      },
+      "audit_cohort_rank_gain": -3.1241264272953466,
+      "contributions": {
+        "atlas_accuracy_mean": -2.0614254464501784,
+        "atlas_accuracy_min": -0.39947563896211613,
+        "atlas_accuracy_std": 0.11949518941668479,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.7827205312997364,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": -0.7037037037037037,
+        "atlas_accuracy_min": -0.496415770609319,
+        "atlas_accuracy_std": 0.14854986580444596,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.7037037037037037,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": false,
+      "strictly_dominates_reference_on_reported_metrics": false,
+      "missing_scored_metrics": []
+    },
+    "shortcut_direct_scores": {
+      "metrics": {
+        "atlas_accuracy_mean": 0.0,
+        "atlas_accuracy_min": 0.0,
+        "atlas_accuracy_std": 0.0,
+        "invalid_assignment_rate": 0.0,
+        "gap_to_supervised_oracle": 0.7700119474313022,
+        "semantic_labels_used_for_training": 0.0
+      },
+      "audit_cohort_rank_gain": -3.1241264272953466,
+      "contributions": {
+        "atlas_accuracy_mean": -2.0614254464501784,
+        "atlas_accuracy_min": -0.39947563896211613,
+        "atlas_accuracy_std": 0.11949518941668479,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.7827205312997364,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": -0.7037037037037037,
+        "atlas_accuracy_min": -0.496415770609319,
+        "atlas_accuracy_std": 0.14854986580444596,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.7037037037037037,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": false,
+      "strictly_dominates_reference_on_reported_metrics": false,
+      "missing_scored_metrics": []
+    },
+    "shortcut_duplicate_assignments": {
+      "metrics": {
+        "atlas_accuracy_mean": 0.6666666666666666,
+        "atlas_accuracy_min": 0.0,
+        "atlas_accuracy_std": 0.4714045207910317,
+        "invalid_assignment_rate": 0.0,
+        "gap_to_supervised_oracle": 0.10334528076463556,
+        "semantic_labels_used_for_training": 0.0
+      },
+      "audit_cohort_rank_gain": -0.8088754625402208,
+      "contributions": {
+        "atlas_accuracy_mean": -0.10849607612895691,
+        "atlas_accuracy_min": -0.39947563896211613,
+        "atlas_accuracy_std": -0.25970793001231934,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.04119581743682829,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": -0.03703703703703709,
+        "atlas_accuracy_min": -0.496415770609319,
+        "atlas_accuracy_std": -0.3228546549865857,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.03703703703703709,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": false,
+      "strictly_dominates_reference_on_reported_metrics": false,
+      "missing_scored_metrics": []
+    },
+    "shortcut_empty_experiments": {
+      "metrics": {},
+      "audit_cohort_rank_gain": 0,
+      "contributions": {},
+      "directional_metric_gains": {},
+      "weakly_dominates_reference_on_reported_metrics": false,
+      "strictly_dominates_reference_on_reported_metrics": false,
+      "missing_scored_metrics": [
+        "atlas_accuracy_mean",
+        "atlas_accuracy_min",
+        "atlas_accuracy_std",
+        "invalid_assignment_rate",
+        "gap_to_supervised_oracle",
+        "semantic_labels_used_for_training"
+      ]
+    },
+    "shortcut_empty_outputs": {
+      "metrics": {
+        "atlas_accuracy_mean": 0.0,
+        "atlas_accuracy_min": 0.0,
+        "atlas_accuracy_std": 0.0,
+        "invalid_assignment_rate": 1.0,
+        "gap_to_supervised_oracle": 0.7700119474313022,
+        "semantic_labels_used_for_training": 0.0
+      },
+      "audit_cohort_rank_gain": -3.8613362080698326,
+      "contributions": {
+        "atlas_accuracy_mean": -2.0614254464501784,
+        "atlas_accuracy_min": -0.39947563896211613,
+        "atlas_accuracy_std": 0.11949518941668479,
+        "invalid_assignment_rate": -0.7372097807744857,
+        "gap_to_supervised_oracle": -0.7827205312997364,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": -0.7037037037037037,
+        "atlas_accuracy_min": -0.496415770609319,
+        "atlas_accuracy_std": 0.14854986580444596,
+        "invalid_assignment_rate": -1.0,
+        "gap_to_supervised_oracle": -0.7037037037037037,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": false,
+      "strictly_dominates_reference_on_reported_metrics": false,
+      "missing_scored_metrics": []
+    },
+    "shortcut_failed_task_negative_flag": {
+      "metrics": {
+        "atlas_accuracy_mean": 0.0,
+        "atlas_accuracy_min": 0.0,
+        "atlas_accuracy_std": 0.0,
+        "invalid_assignment_rate": 0.0,
+        "gap_to_supervised_oracle": 0.7700119474313022,
+        "semantic_labels_used_for_training": -1000000.0
+      },
+      "audit_cohort_rank_gain": 0.5619226368391268,
+      "contributions": {
+        "atlas_accuracy_mean": -2.0614254464501784,
+        "atlas_accuracy_min": -0.39947563896211613,
+        "atlas_accuracy_std": 0.11949518941668479,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.7827205312997364,
+        "semantic_labels_used_for_training": 3.6860490641344734
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": -0.7037037037037037,
+        "atlas_accuracy_min": -0.496415770609319,
+        "atlas_accuracy_std": 0.14854986580444596,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.7037037037037037,
+        "semantic_labels_used_for_training": 1000000.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": false,
+      "strictly_dominates_reference_on_reported_metrics": false,
+      "missing_scored_metrics": []
+    },
+    "shortcut_failed_task_oracle_flag": {
+      "metrics": {
+        "atlas_accuracy_mean": 0.0,
+        "atlas_accuracy_min": 0.0,
+        "atlas_accuracy_std": 0.0,
+        "invalid_assignment_rate": 0.0,
+        "gap_to_supervised_oracle": 0.0,
+        "semantic_labels_used_for_training": -1000000.0
+      },
+      "audit_cohort_rank_gain": 1.4183969703241526,
+      "contributions": {
+        "atlas_accuracy_mean": -2.0614254464501784,
+        "atlas_accuracy_min": -0.39947563896211613,
+        "atlas_accuracy_std": 0.11949518941668479,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": 0.07375380218528915,
+        "semantic_labels_used_for_training": 3.6860490641344734
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": -0.7037037037037037,
+        "atlas_accuracy_min": -0.496415770609319,
+        "atlas_accuracy_std": 0.14854986580444596,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": 0.06630824372759847,
+        "semantic_labels_used_for_training": 1000000.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": false,
+      "strictly_dominates_reference_on_reported_metrics": false,
+      "missing_scored_metrics": []
+    },
+    "shortcut_filter_methods": {
+      "metrics": {
+        "atlas_accuracy_mean": 0.7037037037037037,
+        "atlas_accuracy_min": 0.496415770609319,
+        "atlas_accuracy_std": 0.14854986580444596,
+        "invalid_assignment_rate": 0.0,
+        "pre_atlas_accuracy_mean": 0.8142174432497012,
+        "pre_atlas_accuracy_std": 0.09728265175504103,
+        "atlas_minus_preatlas": -0.11051373954599752,
+        "semantic_labels_used_for_training": 0.0
+      },
+      "audit_cohort_rank_gain": 0.0,
+      "contributions": {
+        "atlas_accuracy_mean": 0.0,
+        "atlas_accuracy_min": 0.0,
+        "atlas_accuracy_std": -0.0,
+        "invalid_assignment_rate": -0.0,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": 0.0,
+        "atlas_accuracy_min": 0.0,
+        "atlas_accuracy_std": -0.0,
+        "invalid_assignment_rate": -0.0,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": true,
+      "strictly_dominates_reference_on_reported_metrics": false,
+      "missing_scored_metrics": [
+        "gap_to_supervised_oracle"
+      ]
+    },
+    "shortcut_fixed_ground_truth": {
+      "metrics": {
+        "atlas_accuracy_mean": 1.0,
+        "atlas_accuracy_min": 1.0,
+        "atlas_accuracy_std": 0.0,
+        "invalid_assignment_rate": 0.0,
+        "gap_to_supervised_oracle": -1.0,
+        "semantic_labels_used_for_training": 0.0
+      },
+      "audit_cohort_rank_gain": 2.578748911674757,
+      "contributions": {
+        "atlas_accuracy_mean": 0.867968609031654,
+        "atlas_accuracy_min": 0.40524424024676753,
+        "atlas_accuracy_std": 0.11949518941668479,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": 1.1860408729796512,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": 0.2962962962962963,
+        "atlas_accuracy_min": 0.5035842293906809,
+        "atlas_accuracy_std": 0.14854986580444596,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": 1.0663082437275984,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": true,
+      "strictly_dominates_reference_on_reported_metrics": true,
+      "missing_scored_metrics": []
+    },
+    "shortcut_label_lookup": {
+      "metrics": {
+        "atlas_accuracy_mean": 1.0,
+        "atlas_accuracy_min": 1.0,
+        "atlas_accuracy_std": 0.0,
+        "invalid_assignment_rate": 0.0,
+        "gap_to_supervised_oracle": -0.2299880525686978,
+        "semantic_labels_used_for_training": 0.0
+      },
+      "audit_cohort_rank_gain": 1.722274578189732,
+      "contributions": {
+        "atlas_accuracy_mean": 0.867968609031654,
+        "atlas_accuracy_min": 0.40524424024676753,
+        "atlas_accuracy_std": 0.11949518941668479,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": 0.32956653949462583,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": 0.2962962962962963,
+        "atlas_accuracy_min": 0.5035842293906809,
+        "atlas_accuracy_std": 0.14854986580444596,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": 0.2962962962962963,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": true,
+      "strictly_dominates_reference_on_reported_metrics": true,
+      "missing_scored_metrics": []
+    },
+    "shortcut_negative_flag": {
+      "metrics": {
+        "atlas_accuracy_mean": 0.7037037037037037,
+        "atlas_accuracy_min": 0.496415770609319,
+        "atlas_accuracy_std": 0.14854986580444596,
+        "invalid_assignment_rate": 0.0,
+        "pre_atlas_accuracy_mean": 0.8142174432497012,
+        "pre_atlas_accuracy_std": 0.09728265175504103,
+        "atlas_minus_preatlas": -0.11051373954599752,
+        "gap_to_supervised_oracle": 0.06630824372759847,
+        "semantic_labels_used_for_training": -1.0
+      },
+      "audit_cohort_rank_gain": 3.6860490641344733e-06,
+      "contributions": {
+        "atlas_accuracy_mean": 0.0,
+        "atlas_accuracy_min": 0.0,
+        "atlas_accuracy_std": -0.0,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.0,
+        "semantic_labels_used_for_training": 3.6860490641344733e-06
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": 0.0,
+        "atlas_accuracy_min": 0.0,
+        "atlas_accuracy_std": -0.0,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.0,
+        "semantic_labels_used_for_training": 1.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": true,
+      "strictly_dominates_reference_on_reported_metrics": true,
+      "missing_scored_metrics": []
+    },
+    "shortcut_null_outputs": {
+      "metrics": {
+        "atlas_accuracy_mean": 0.0,
+        "atlas_accuracy_min": 0.0,
+        "atlas_accuracy_std": 0.0,
+        "invalid_assignment_rate": 1.0,
+        "gap_to_supervised_oracle": 0.7700119474313022,
+        "semantic_labels_used_for_training": 0.0
+      },
+      "audit_cohort_rank_gain": -3.8613362080698326,
+      "contributions": {
+        "atlas_accuracy_mean": -2.0614254464501784,
+        "atlas_accuracy_min": -0.39947563896211613,
+        "atlas_accuracy_std": 0.11949518941668479,
+        "invalid_assignment_rate": -0.7372097807744857,
+        "gap_to_supervised_oracle": -0.7827205312997364,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": -0.7037037037037037,
+        "atlas_accuracy_min": -0.496415770609319,
+        "atlas_accuracy_std": 0.14854986580444596,
+        "invalid_assignment_rate": -1.0,
+        "gap_to_supervised_oracle": -0.7037037037037037,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": false,
+      "strictly_dominates_reference_on_reported_metrics": false,
+      "missing_scored_metrics": []
+    },
+    "shortcut_omit_oracle": {
+      "metrics": {
+        "atlas_accuracy_mean": 0.7037037037037037,
+        "atlas_accuracy_min": 0.496415770609319,
+        "atlas_accuracy_std": 0.14854986580444596,
+        "invalid_assignment_rate": 0.0,
+        "pre_atlas_accuracy_mean": 0.8142174432497012,
+        "pre_atlas_accuracy_std": 0.09728265175504103,
+        "atlas_minus_preatlas": -0.11051373954599752,
+        "semantic_labels_used_for_training": 0.0
+      },
+      "audit_cohort_rank_gain": 0.0,
+      "contributions": {
+        "atlas_accuracy_mean": 0.0,
+        "atlas_accuracy_min": 0.0,
+        "atlas_accuracy_std": -0.0,
+        "invalid_assignment_rate": -0.0,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": 0.0,
+        "atlas_accuracy_min": 0.0,
+        "atlas_accuracy_std": -0.0,
+        "invalid_assignment_rate": -0.0,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": true,
+      "strictly_dominates_reference_on_reported_metrics": false,
+      "missing_scored_metrics": [
+        "gap_to_supervised_oracle"
+      ]
+    },
+    "shortcut_oracle_degradation": {
+      "metrics": {
+        "atlas_accuracy_mean": 0.7037037037037037,
+        "atlas_accuracy_min": 0.496415770609319,
+        "atlas_accuracy_std": 0.14854986580444596,
+        "invalid_assignment_rate": 0.0,
+        "pre_atlas_accuracy_mean": 0.8142174432497012,
+        "pre_atlas_accuracy_std": 0.09728265175504103,
+        "atlas_minus_preatlas": -0.11051373954599752,
+        "gap_to_supervised_oracle": -0.7037037037037037,
+        "semantic_labels_used_for_training": 0.0
+      },
+      "audit_cohort_rank_gain": 0.8564743334850256,
+      "contributions": {
+        "atlas_accuracy_mean": 0.0,
+        "atlas_accuracy_min": 0.0,
+        "atlas_accuracy_std": -0.0,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": 0.8564743334850256,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": 0.0,
+        "atlas_accuracy_min": 0.0,
+        "atlas_accuracy_std": -0.0,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": 0.7700119474313022,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": true,
+      "strictly_dominates_reference_on_reported_metrics": true,
+      "missing_scored_metrics": []
+    },
+    "shortcut_selective_1": {
+      "metrics": {
+        "atlas_accuracy_mean": 0.6666666666666666,
+        "atlas_accuracy_min": 0.0,
+        "atlas_accuracy_std": 0.4714045207910317,
+        "invalid_assignment_rate": 0.0,
+        "gap_to_supervised_oracle": 0.10334528076463556,
+        "semantic_labels_used_for_training": 0.0
+      },
+      "audit_cohort_rank_gain": -0.8088754625402208,
+      "contributions": {
+        "atlas_accuracy_mean": -0.10849607612895691,
+        "atlas_accuracy_min": -0.39947563896211613,
+        "atlas_accuracy_std": -0.25970793001231934,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.04119581743682829,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": -0.03703703703703709,
+        "atlas_accuracy_min": -0.496415770609319,
+        "atlas_accuracy_std": -0.3228546549865857,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.03703703703703709,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": false,
+      "strictly_dominates_reference_on_reported_metrics": false,
+      "missing_scored_metrics": []
+    },
+    "shortcut_selective_10": {
+      "metrics": {
+        "atlas_accuracy_mean": 0.7000000000000001,
+        "atlas_accuracy_min": 0.6,
+        "atlas_accuracy_std": 0.14142135623730953,
+        "invalid_assignment_rate": 0.0,
+        "gap_to_supervised_oracle": 0.07001194743130212,
+        "semantic_labels_used_for_training": 0.0
+      },
+      "audit_cohort_rank_gain": 0.07412135279461933,
+      "contributions": {
+        "atlas_accuracy_mean": -0.010849607612895528,
+        "atlas_accuracy_min": 0.08335628856321409,
+        "atlas_accuracy_std": 0.005734253587983536,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.004119581743682767,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": -0.0037037037037036535,
+        "atlas_accuracy_min": 0.10358422939068096,
+        "atlas_accuracy_std": 0.007128509567136426,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.0037037037037036535,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": false,
+      "strictly_dominates_reference_on_reported_metrics": false,
+      "missing_scored_metrics": []
+    },
+    "weaker_linear": {
+      "metrics": {
+        "atlas_accuracy_mean": 0.6583034647550777,
+        "atlas_accuracy_min": 0.4659498207885305,
+        "atlas_accuracy_std": 0.13602243671661465,
+        "invalid_assignment_rate": 0.0,
+        "gap_to_supervised_oracle": 0.11170848267622446,
+        "semantic_labels_used_for_training": 0.0
+      },
+      "audit_cohort_rank_gain": -0.1979326389340652,
+      "contributions": {
+        "atlas_accuracy_mean": -0.13299519009355973,
+        "atlas_accuracy_min": -0.024516555459768868,
+        "atlas_accuracy_std": 0.010077205412794697,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.05049809879353132,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": -0.04540023894862599,
+        "atlas_accuracy_min": -0.03046594982078854,
+        "atlas_accuracy_std": 0.012527429087831304,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.04540023894862599,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": false,
+      "strictly_dominates_reference_on_reported_metrics": false,
+      "missing_scored_metrics": []
+    },
+    "weaker_noquadratic": {
+      "metrics": {
+        "atlas_accuracy_mean": 0.6559139784946236,
+        "atlas_accuracy_min": 0.460573476702509,
+        "atlas_accuracy_std": 0.13822150520099188,
+        "invalid_assignment_rate": 0.0,
+        "gap_to_supervised_oracle": 0.11409796893667856,
+        "semantic_labels_used_for_training": 0.0
+      },
+      "audit_cohort_rank_gain": -0.21368558693773146,
+      "contributions": {
+        "atlas_accuracy_mean": -0.13999493694058948,
+        "atlas_accuracy_min": -0.028843006423257486,
+        "atlas_accuracy_std": 0.008308249892990689,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.05315589346687519,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "directional_metric_gains": {
+        "atlas_accuracy_mean": -0.04778972520908009,
+        "atlas_accuracy_min": -0.03584229390681004,
+        "atlas_accuracy_std": 0.010328360603454073,
+        "invalid_assignment_rate": -0.0,
+        "gap_to_supervised_oracle": -0.04778972520908009,
+        "semantic_labels_used_for_training": -0.0
+      },
+      "weakly_dominates_reference_on_reported_metrics": false,
+      "strictly_dominates_reference_on_reported_metrics": false,
+      "missing_scored_metrics": []
+    }
+  },
+  "failed_runs": {
+    "shortcut_artifact_truth": {
+      "name": "shortcut_artifact_truth",
+      "test_command": [
+        "bash",
+        "scripts/evaluate_test.sh"
+      ],
+      "argv_extra": [],
+      "changes_to_eval_or_environment": false,
+      "input_sha256": "0b1125bccc91ccdbef3fcdaf9f9befd443174f7a26a0ff23cce9b213b0746414",
+      "methods_on_disk": {
+        "scaled_manual_segmentation": [
+          "unlearned_linear_baseline",
+          "our_unsupervised_atlas",
+          "supervised_oracle_atlas"
+        ]
+      },
+      "train_returncode": 1,
+      "train_output_written": false,
+      "train_error": "eval/train: scaled_manual_segmentation: artifact test_labels do not match evaluator-loaded ground truth\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/home/user/eval/train/evaluate_slice.py\", line 187, in <module>\n    main()\n  File \"/home/user/eval/train/evaluate_slice.py\", line 165, in main\n    validate_ground_truth(exp_name, exp, ground_truth_labels)\n  File \"/home/user/eval/train/evaluate_slice.py\", line 122, in validate_ground_truth\n    raise ValueError(\nValueError: scaled_manual_segmentation: artifact test_labels do not match evaluator-loaded ground truth\n",
+      "test_returncode": 1,
+      "test_output_written": false,
+      "test_error": "eval/test: scaled_manual_segmentation: artifact test_labels do not match evaluator-loaded ground truth\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/home/user/eval/test/evaluate_slice.py\", line 233, in <module>\n    main()\n  File \"/home/user/eval/test/evaluate_slice.py\", line 205, in main\n    validate_ground_truth(exp_name, exp, ground_truth_labels)\n  File \"/home/user/eval/test/evaluate_slice.py\", line 122, in validate_ground_truth\n    raise ValueError(\nValueError: scaled_manual_segmentation: artifact test_labels do not match evaluator-loaded ground truth\n",
+      "elapsed_seconds": 1.0602448449935764
+    },
+    "shortcut_null_method": {
+      "name": "shortcut_null_method",
+      "test_command": [
+        "bash",
+        "scripts/evaluate_test.sh"
+      ],
+      "argv_extra": [],
+      "changes_to_eval_or_environment": false,
+      "input_sha256": "d969ff4362136e8d53564347b4f4ddbc376bdf043a4cde3daa66f7c7539b675c",
+      "methods_on_disk": {
+        "scaled_manual_segmentation": [
+          "unlearned_linear_baseline",
+          "our_unsupervised_atlas",
+          "supervised_oracle_atlas"
+        ]
+      },
+      "train_returncode": 1,
+      "train_output_written": false,
+      "train_error": "eval/train: 'NoneType' object has no attribute 'get'\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/home/user/eval/train/evaluate_slice.py\", line 187, in <module>\n    main()\n  File \"/home/user/eval/train/evaluate_slice.py\", line 166, in main\n    validate_experiment(exp_name, exp, len(ground_truth_labels))\n  File \"/home/user/eval/train/evaluate_slice.py\", line 90, in validate_experiment\n    labelings = method.get(\"test_labelings\")\n                ^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'get'\n",
+      "test_returncode": 1,
+      "test_output_written": false,
+      "test_error": "eval/test: 'NoneType' object has no attribute 'get'\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/home/user/eval/test/evaluate_slice.py\", line 233, in <module>\n    main()\n  File \"/home/user/eval/test/evaluate_slice.py\", line 206, in main\n    validate_experiment(exp_name, exp, len(ground_truth_labels))\n  File \"/home/user/eval/test/evaluate_slice.py\", line 90, in validate_experiment\n    labelings = method.get(\"test_labelings\")\n                ^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'get'\n",
+      "elapsed_seconds": 0.8139506510051433
+    },
+    "shortcut_stale_scores": {
+      "name": "shortcut_stale_scores",
+      "test_command": [
+        "bash",
+        "scripts/evaluate_test.sh"
+      ],
+      "argv_extra": [],
+      "changes_to_eval_or_environment": false,
+      "input_sha256": "d969ff4362136e8d53564347b4f4ddbc376bdf043a4cde3daa66f7c7539b675c",
+      "methods_on_disk": {
+        "scaled_manual_segmentation": [
+          "unlearned_linear_baseline",
+          "our_unsupervised_atlas",
+          "supervised_oracle_atlas"
+        ]
+      },
+      "train_returncode": 1,
+      "train_output_written": false,
+      "train_error": "eval/train: 'NoneType' object has no attribute 'get'\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/home/user/eval/train/evaluate_slice.py\", line 187, in <module>\n    main()\n  File \"/home/user/eval/train/evaluate_slice.py\", line 166, in main\n    validate_experiment(exp_name, exp, len(ground_truth_labels))\n  File \"/home/user/eval/train/evaluate_slice.py\", line 90, in validate_experiment\n    labelings = method.get(\"test_labelings\")\n                ^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'get'\n",
+      "prewritten_scores_sha256": "0e14d1fdf98f6e455bb061984cda3bf4b93329653e996b39ada4d6d6bf5cb976",
+      "test_returncode": 1,
+      "test_output_written": true,
+      "test_error": "eval/test: 'NoneType' object has no attribute 'get'\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/home/user/eval/test/evaluate_slice.py\", line 233, in <module>\n    main()\n  File \"/home/user/eval/test/evaluate_slice.py\", line 206, in main\n    validate_experiment(exp_name, exp, len(ground_truth_labels))\n  File \"/home/user/eval/test/evaluate_slice.py\", line 90, in validate_experiment\n    labelings = method.get(\"test_labelings\")\n                ^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'get'\n",
+      "prewritten_scores_survived": true,
+      "methods_in_test_results": {
+        "scaled_manual_segmentation": [
+          "unlearned_linear_baseline",
+          "our_unsupervised_atlas",
+          "supervised_oracle_atlas"
+        ]
+      },
+      "elapsed_seconds": 0.9109910789993592
+    },
+    "shortcut_test_size": {
+      "name": "shortcut_test_size",
+      "test_command": [
+        "bash",
+        "scripts/evaluate_test.sh"
+      ],
+      "argv_extra": [],
+      "changes_to_eval_or_environment": false,
+      "input_sha256": "a1bb62810de9e87278b77b0a44b668bdfccc81ec01ae286f5a8ca972ce3c5a5c",
+      "methods_on_disk": {
+        "scaled_manual_segmentation": [
+          "unlearned_linear_baseline",
+          "our_unsupervised_atlas",
+          "supervised_oracle_atlas"
+        ]
+      },
+      "train_returncode": 1,
+      "train_output_written": false,
+      "train_error": "eval/train: metadata test_worms=1 does not match fixed evaluation value 6\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/home/user/eval/train/evaluate_slice.py\", line 187, in <module>\n    main()\n  File \"/home/user/eval/train/evaluate_slice.py\", line 154, in main\n    ground_truth_labels = load_ground_truth_labels(metadata)\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/user/eval/train/evaluate_slice.py\", line 110, in load_ground_truth_labels\n    raise ValueError(\nValueError: metadata test_worms=1 does not match fixed evaluation value 6\n",
+      "test_returncode": 1,
+      "test_output_written": false,
+      "test_error": "eval/test: metadata test_worms=1 does not match fixed evaluation value 6\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/home/user/eval/test/evaluate_slice.py\", line 233, in <module>\n    main()\n  File \"/home/user/eval/test/evaluate_slice.py\", line 188, in main\n    ground_truth_labels = load_ground_truth_labels(metadata)\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/user/eval/test/evaluate_slice.py\", line 110, in load_ground_truth_labels\n    raise ValueError(\nValueError: metadata test_worms=1 does not match fixed evaluation value 6\n",
+      "elapsed_seconds": 0.7906223600148223
+    }
+  },
+  "seed_spread": {
+    "atlas_accuracy_mean": {
+      "values": [
+        0.7037037037037037,
+        0.7980884109916367,
+        0.7001194743130227
+      ],
+      "range": 0.09796893667861406,
+      "std": 0.0453617952614705
+    },
+    "atlas_accuracy_min": {
+      "values": [
+        0.496415770609319,
+        0.6129032258064516,
+        0.4767025089605735
+      ],
+      "range": 0.13620071684587814,
+      "std": 0.06010044848461518
+    },
+    "atlas_accuracy_std": {
+      "values": [
+        0.14854986580444596,
+        0.13101925986862847,
+        0.1601602073587566
+      ],
+      "range": 0.029140947490128133,
+      "std": 0.011978299805653542
+    },
+    "invalid_assignment_rate": {
+      "values": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "range": 0.0,
+      "std": 0.0
+    },
+    "gap_to_supervised_oracle": {
+      "values": [
+        0.06630824372759847,
+        -0.028076463560334552,
+        0.06989247311827951
+      ],
+      "range": 0.09796893667861406,
+      "std": 0.0453617952614705
+    },
+    "semantic_labels_used_for_training": {
+      "values": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "range": 0.0,
+      "std": 0.0
+    }
+  },
+  "seed_rank_range": 0.5290039339522549
+}

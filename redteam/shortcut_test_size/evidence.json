@@ -1,0 +1,24 @@
+{
+  "name": "shortcut_test_size",
+  "test_command": [
+    "bash",
+    "scripts/evaluate_test.sh"
+  ],
+  "argv_extra": [],
+  "changes_to_eval_or_environment": false,
+  "input_sha256": "a1bb62810de9e87278b77b0a44b668bdfccc81ec01ae286f5a8ca972ce3c5a5c",
+  "methods_on_disk": {
+    "scaled_manual_segmentation": [
+      "unlearned_linear_baseline",
+      "our_unsupervised_atlas",
+      "supervised_oracle_atlas"
+    ]
+  },
+  "train_returncode": 1,
+  "train_output_written": false,
+  "train_error": "eval/train: metadata test_worms=1 does not match fixed evaluation value 6\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/home/user/eval/train/evaluate_slice.py\", line 187, in <module>\n    main()\n  File \"/home/user/eval/train/evaluate_slice.py\", line 154, in main\n    ground_truth_labels = load_ground_truth_labels(metadata)\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/user/eval/train/evaluate_slice.py\", line 110, in load_ground_truth_labels\n    raise ValueError(\nValueError: metadata test_worms=1 does not match fixed evaluation value 6\n",
+  "test_returncode": 1,
+  "test_output_written": false,
+  "test_error": "eval/test: metadata test_worms=1 does not match fixed evaluation value 6\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/home/user/eval/test/evaluate_slice.py\", line 233, in <module>\n    main()\n  File \"/home/user/eval/test/evaluate_slice.py\", line 188, in main\n    ground_truth_labels = load_ground_truth_labels(metadata)\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/user/eval/test/evaluate_slice.py\", line 110, in load_ground_truth_labels\n    raise ValueError(\nValueError: metadata test_worms=1 does not match fixed evaluation value 6\n",
+  "elapsed_seconds": 0.7906223600148223
+}

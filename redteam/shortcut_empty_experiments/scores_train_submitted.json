@@ -1,0 +1,8 @@
+{
+  "_metadata": {
+    "slice": "train",
+    "split_seed": 250307348,
+    "source_predictions": "outputs/method/predictions.json"
+  },
+  "experiments": {}
+}

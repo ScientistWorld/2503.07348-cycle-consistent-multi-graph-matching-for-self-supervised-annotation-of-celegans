@@ -1,0 +1,43 @@
+{
+  "_metadata": {
+    "slice": "train",
+    "split_seed": 250307348,
+    "source_predictions": "outputs/method/predictions.json"
+  },
+  "experiments": {
+    "scaled_manual_segmentation": {
+      "_slice": "train",
+      "_target_indices": [
+        0,
+        1,
+        2
+      ],
+      "results": {
+        "unlearned_linear_baseline": {
+          "atlas_accuracy_mean": 0.7299880525686978,
+          "atlas_accuracy_min": 0.6362007168458781,
+          "atlas_accuracy_std": 0.07340138537656701,
+          "invalid_assignment_rate": 0.0,
+          "gap_to_supervised_oracle": 0.09737156511350042
+        },
+        "our_unsupervised_atlas": {
+          "atlas_accuracy_mean": 0.8142174432497012,
+          "atlas_accuracy_min": 0.6953405017921147,
+          "atlas_accuracy_std": 0.08545128275004131,
+          "invalid_assignment_rate": 0.0,
+          "pre_atlas_accuracy_mean": 0.8521505376344085,
+          "pre_atlas_accuracy_std": 0.09301316976714466,
+          "atlas_minus_preatlas": -0.03793309438470727,
+          "gap_to_supervised_oracle": 0.01314217443249699,
+          "semantic_labels_used_for_training": 0.0
+        },
+        "supervised_oracle_atlas": {
+          "atlas_accuracy_mean": 0.8273596176821982,
+          "atlas_accuracy_min": 0.7078853046594982,
+          "atlas_accuracy_std": 0.08528825948661768,
+          "invalid_assignment_rate": 0.0
+        }
+      }
+    }
+  }
+}

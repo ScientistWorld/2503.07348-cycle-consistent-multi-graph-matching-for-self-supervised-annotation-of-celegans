@@ -1,0 +1,28 @@
+{
+  "name": "shortcut_filter_methods",
+  "test_command": [
+    "bash",
+    "scripts/evaluate_test.sh"
+  ],
+  "argv_extra": [],
+  "changes_to_eval_or_environment": false,
+  "input_sha256": "b4d8d6c7ea9d4b7efd5d9b0fd685003d23838a8b4872cc1d52d4cf83f9affdc5",
+  "methods_on_disk": {
+    "scaled_manual_segmentation": [
+      "unlearned_linear_baseline",
+      "our_unsupervised_atlas",
+      "supervised_oracle_atlas",
+      "shortcut_added_candidate"
+    ]
+  },
+  "train_returncode": 0,
+  "train_output_written": true,
+  "test_returncode": 0,
+  "test_output_written": true,
+  "methods_in_test_results": {
+    "scaled_manual_segmentation": [
+      "our_unsupervised_atlas"
+    ]
+  },
+  "elapsed_seconds": 0.9421965499932412
+}

@@ -1,0 +1,24 @@
+{
+  "name": "shortcut_artifact_truth",
+  "test_command": [
+    "bash",
+    "scripts/evaluate_test.sh"
+  ],
+  "argv_extra": [],
+  "changes_to_eval_or_environment": false,
+  "input_sha256": "0b1125bccc91ccdbef3fcdaf9f9befd443174f7a26a0ff23cce9b213b0746414",
+  "methods_on_disk": {
+    "scaled_manual_segmentation": [
+      "unlearned_linear_baseline",
+      "our_unsupervised_atlas",
+      "supervised_oracle_atlas"
+    ]
+  },
+  "train_returncode": 1,
+  "train_output_written": false,
+  "train_error": "eval/train: scaled_manual_segmentation: artifact test_labels do not match evaluator-loaded ground truth\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/home/user/eval/train/evaluate_slice.py\", line 187, in <module>\n    main()\n  File \"/home/user/eval/train/evaluate_slice.py\", line 165, in main\n    validate_ground_truth(exp_name, exp, ground_truth_labels)\n  File \"/home/user/eval/train/evaluate_slice.py\", line 122, in validate_ground_truth\n    raise ValueError(\nValueError: scaled_manual_segmentation: artifact test_labels do not match evaluator-loaded ground truth\n",
+  "test_returncode": 1,
+  "test_output_written": false,
+  "test_error": "eval/test: scaled_manual_segmentation: artifact test_labels do not match evaluator-loaded ground truth\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/home/user/eval/test/evaluate_slice.py\", line 233, in <module>\n    main()\n  File \"/home/user/eval/test/evaluate_slice.py\", line 205, in main\n    validate_ground_truth(exp_name, exp, ground_truth_labels)\n  File \"/home/user/eval/test/evaluate_slice.py\", line 122, in validate_ground_truth\n    raise ValueError(\nValueError: scaled_manual_segmentation: artifact test_labels do not match evaluator-loaded ground truth\n",
+  "elapsed_seconds": 1.0602448449935764
+}

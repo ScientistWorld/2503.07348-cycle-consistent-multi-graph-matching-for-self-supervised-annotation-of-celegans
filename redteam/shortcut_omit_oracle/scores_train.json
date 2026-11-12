@@ -1,0 +1,35 @@
+{
+  "_metadata": {
+    "slice": "train",
+    "split_seed": 250307348,
+    "source_predictions": "outputs/method/predictions.json"
+  },
+  "experiments": {
+    "scaled_manual_segmentation": {
+      "_slice": "train",
+      "_target_indices": [
+        0,
+        1,
+        2
+      ],
+      "results": {
+        "unlearned_linear_baseline": {
+          "atlas_accuracy_mean": 0.7299880525686978,
+          "atlas_accuracy_min": 0.6362007168458781,
+          "atlas_accuracy_std": 0.07340138537656701,
+          "invalid_assignment_rate": 0.0
+        },
+        "our_unsupervised_atlas": {
+          "atlas_accuracy_mean": 0.7735961768219832,
+          "atlas_accuracy_min": 0.6559139784946236,
+          "atlas_accuracy_std": 0.08489824843841409,
+          "invalid_assignment_rate": 0.0,
+          "pre_atlas_accuracy_mean": 0.8142174432497012,
+          "pre_atlas_accuracy_std": 0.09728265175504103,
+          "atlas_minus_preatlas": -0.04062126642771802,
+          "semantic_labels_used_for_training": 0.0
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "_metadata": {
+    "slice": "test",
+    "split_seed": 250307348,
+    "source_predictions": "outputs/method/predictions.json",
+    "matched_methods_from": "scoring/scores_train.json"
+  },
+  "experiments": {
+    "scaled_manual_segmentation": {
+      "_slice": "test",
+      "_target_indices": [
+        3,
+        4,
+        5
+      ],
+      "results": {
+        "our_unsupervised_atlas": {
+          "atlas_accuracy_mean": 0.7037037037037037,
+          "atlas_accuracy_min": 0.496415770609319,
+          "atlas_accuracy_std": 0.14854986580444596,
+          "invalid_assignment_rate": 0.0,
+          "pre_atlas_accuracy_mean": 0.8142174432497012,
+          "pre_atlas_accuracy_std": 0.09728265175504103,
+          "atlas_minus_preatlas": -0.11051373954599752,
+          "semantic_labels_used_for_training": 0.0
+        }
+      }
+    }
+  }
+}
