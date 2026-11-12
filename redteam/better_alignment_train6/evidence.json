@@ -1,0 +1,31 @@
+{
+  "name": "better_alignment_train6",
+  "test_command": [
+    "bash",
+    "scripts/evaluate_test.sh"
+  ],
+  "argv_extra": [],
+  "changes_to_eval_or_environment": false,
+  "input_sha256": "ea2f08b52367b1bfe3ef80582f5ddc0a97668518fdcb0ab64d41c02d1186dab8",
+  "methods_on_disk": {
+    "scaled_manual_segmentation": [
+      "unlearned_linear_baseline",
+      "our_unsupervised_atlas",
+      "supervised_oracle_atlas"
+    ]
+  },
+  "train_returncode": 0,
+  "train_output_written": true,
+  "train_output_exists": true,
+  "test_returncode": 0,
+  "test_output_written": true,
+  "test_output_exists": true,
+  "methods_in_test_results": {
+    "scaled_manual_segmentation": [
+      "unlearned_linear_baseline",
+      "our_unsupervised_atlas",
+      "supervised_oracle_atlas"
+    ]
+  },
+  "elapsed_seconds": 118.04217164797592
+}

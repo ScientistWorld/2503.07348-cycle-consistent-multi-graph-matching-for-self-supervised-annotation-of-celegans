@@ -1,0 +1,31 @@
+{
+  "name": "weaker_radii_only",
+  "test_command": [
+    "bash",
+    "scripts/evaluate_test.sh"
+  ],
+  "argv_extra": [],
+  "changes_to_eval_or_environment": false,
+  "input_sha256": "4f75fc90fb7685d33e9fab885238f4472ec344860e94bce402c964d6dc35e208",
+  "methods_on_disk": {
+    "scaled_manual_segmentation": [
+      "unlearned_linear_baseline",
+      "our_unsupervised_atlas",
+      "supervised_oracle_atlas"
+    ]
+  },
+  "train_returncode": 0,
+  "train_output_written": true,
+  "train_output_exists": true,
+  "test_returncode": 0,
+  "test_output_written": true,
+  "test_output_exists": true,
+  "methods_in_test_results": {
+    "scaled_manual_segmentation": [
+      "unlearned_linear_baseline",
+      "our_unsupervised_atlas",
+      "supervised_oracle_atlas"
+    ]
+  },
+  "elapsed_seconds": 10.720084783999482
+}

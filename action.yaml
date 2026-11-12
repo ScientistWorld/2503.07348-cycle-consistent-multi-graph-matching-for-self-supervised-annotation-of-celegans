@@ -1,4 +1,4 @@
 action: submit
 gpus: 0
 test: false
-notes: "Run bundled scoring audit: three full-scale seeds, genuine alignment/training variants, weaker ablations, brute force and file-artifact shortcuts; save per-case hidden scores under redteam."
+notes: "Audit follow-up: repair affine registration before learning at 6/24 trials, estimate nucleus-specific atlas variances, run radii-only ablation, and verify stale-score failure handling."

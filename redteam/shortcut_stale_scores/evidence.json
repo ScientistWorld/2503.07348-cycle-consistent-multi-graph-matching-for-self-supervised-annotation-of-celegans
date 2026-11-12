@@ -16,10 +16,12 @@
   },
   "train_returncode": 1,
   "train_output_written": false,
+  "train_output_exists": false,
   "train_error": "eval/train: 'NoneType' object has no attribute 'get'\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/home/user/eval/train/evaluate_slice.py\", line 187, in <module>\n    main()\n  File \"/home/user/eval/train/evaluate_slice.py\", line 166, in main\n    validate_experiment(exp_name, exp, len(ground_truth_labels))\n  File \"/home/user/eval/train/evaluate_slice.py\", line 90, in validate_experiment\n    labelings = method.get(\"test_labelings\")\n                ^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'get'\n",
   "prewritten_scores_sha256": "0e14d1fdf98f6e455bb061984cda3bf4b93329653e996b39ada4d6d6bf5cb976",
   "test_returncode": 1,
-  "test_output_written": true,
+  "test_output_written": false,
+  "test_output_exists": true,
   "test_error": "eval/test: 'NoneType' object has no attribute 'get'\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/home/user/eval/test/evaluate_slice.py\", line 233, in <module>\n    main()\n  File \"/home/user/eval/test/evaluate_slice.py\", line 206, in main\n    validate_experiment(exp_name, exp, len(ground_truth_labels))\n  File \"/home/user/eval/test/evaluate_slice.py\", line 90, in validate_experiment\n    labelings = method.get(\"test_labelings\")\n                ^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'get'\n",
   "prewritten_scores_survived": true,
   "methods_in_test_results": {
@@ -29,5 +31,5 @@
       "supervised_oracle_atlas"
     ]
   },
-  "elapsed_seconds": 0.9109910789993592
+  "elapsed_seconds": 1.876075773005141
 }
