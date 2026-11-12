@@ -41,21 +41,21 @@
     "scaled_manual_segmentation": {
       "results": {
         "supervised_oracle_atlas": {
-          "atlas_accuracy_mean": 0.9107142857142857,
+          "atlas_accuracy_mean": 0.9107142857142858,
           "atlas_accuracy_min": 0.8571428571428571,
-          "atlas_accuracy_std": 0.04552695994279273
+          "atlas_accuracy_std": 0.04552695994279274
         },
         "unlearned_linear_baseline": {
           "atlas_accuracy_mean": 0.7410714285714286,
           "atlas_accuracy_min": 0.6964285714285714,
-          "atlas_accuracy_std": 0.03219242210235705,
-          "gap_to_supervised_oracle": 0.1696428571428571
+          "atlas_accuracy_std": 0.03219242210235706,
+          "gap_to_supervised_oracle": 0.1696428571428572
         },
         "our_unsupervised_atlas": {
           "atlas_accuracy_mean": 0.8169642857142857,
           "atlas_accuracy_min": 0.7857142857142857,
           "atlas_accuracy_std": 0.031881376913137714,
-          "gap_to_supervised_oracle": 0.09375
+          "gap_to_supervised_oracle": 0.09375000000000011
         }
       }
     }

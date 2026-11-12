@@ -5,4 +5,4 @@ action: submit
 gpus: 0
 test: false
 milestone: core_claim
-notes: "Hardening run: paper-faithful reference x3 seeds, fixed comparators, better/weaker variants, shortcut audit through no-arg evaluators"
+notes: "Follow-up: dev-label subset shortcut (alone + hybrid), transductive MGM shortcut, 2x BO diagnostic; re-audit all cases with restricted dev labels"

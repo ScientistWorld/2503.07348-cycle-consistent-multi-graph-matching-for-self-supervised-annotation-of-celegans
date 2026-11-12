@@ -1,8 +1,8 @@
 {
   "frozen_metrics": {
-    "atlas_accuracy_mean": 0.9107142857142857,
+    "atlas_accuracy_mean": 0.9107142857142858,
     "atlas_accuracy_min": 0.8571428571428571,
-    "atlas_accuracy_std": 0.04552695994279273
+    "atlas_accuracy_std": 0.04552695994279274
   },
   "per_worm": {
     "d00": 0.9642857142857143,

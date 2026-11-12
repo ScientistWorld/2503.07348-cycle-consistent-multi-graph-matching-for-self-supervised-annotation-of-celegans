@@ -18,22 +18,22 @@
     "failures": {},
     "per_worm_accuracy": {
       "supervised_oracle_atlas": {
-        "d00": 0.8942652329749103,
-        "d01": 0.9050179211469535,
-        "d02": 0.9032258064516129,
-        "d03": 0.9068100358422939
+        "d00": 0.9642857142857143,
+        "d01": 0.875,
+        "d02": 0.8571428571428571,
+        "d03": 0.9464285714285714
       },
       "unlearned_linear_baseline": {
-        "d00": 0.7365591397849462,
-        "d01": 0.7258064516129032,
-        "d02": 0.7634408602150538,
-        "d03": 0.7096774193548387
+        "d00": 0.7321428571428571,
+        "d01": 0.75,
+        "d02": 0.6964285714285714,
+        "d03": 0.7857142857142857
       },
       "our_unsupervised_atlas": {
-        "d00": 0.8673835125448028,
-        "d01": 0.8727598566308243,
-        "d02": 0.8655913978494624,
-        "d03": 0.8566308243727598
+        "d00": 0.8392857142857143,
+        "d01": 0.7857142857142857,
+        "d02": 0.7857142857142857,
+        "d03": 0.8571428571428571
       }
     }
   },
@@ -41,21 +41,21 @@
     "scaled_manual_segmentation": {
       "results": {
         "supervised_oracle_atlas": {
-          "atlas_accuracy_mean": 0.9023297491039426,
-          "atlas_accuracy_min": 0.8942652329749103,
-          "atlas_accuracy_std": 0.0048254164938481515
+          "atlas_accuracy_mean": 0.9107142857142858,
+          "atlas_accuracy_min": 0.8571428571428571,
+          "atlas_accuracy_std": 0.04552695994279274
         },
         "unlearned_linear_baseline": {
-          "atlas_accuracy_mean": 0.7338709677419355,
-          "atlas_accuracy_min": 0.7096774193548387,
-          "atlas_accuracy_std": 0.019570187874409978,
-          "gap_to_supervised_oracle": 0.1684587813620071
+          "atlas_accuracy_mean": 0.7410714285714286,
+          "atlas_accuracy_min": 0.6964285714285714,
+          "atlas_accuracy_std": 0.03219242210235706,
+          "gap_to_supervised_oracle": 0.1696428571428572
         },
         "our_unsupervised_atlas": {
-          "atlas_accuracy_mean": 0.8655913978494624,
-          "atlas_accuracy_min": 0.8566308243727598,
-          "atlas_accuracy_std": 0.005807115321153991,
-          "gap_to_supervised_oracle": 0.03673835125448022
+          "atlas_accuracy_mean": 0.8169642857142857,
+          "atlas_accuracy_min": 0.7857142857142857,
+          "atlas_accuracy_std": 0.031881376913137714,
+          "gap_to_supervised_oracle": 0.09375000000000011
         }
       }
     }
