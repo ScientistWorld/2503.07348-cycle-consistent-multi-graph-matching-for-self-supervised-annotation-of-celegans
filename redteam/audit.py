@@ -13,7 +13,7 @@ import time
 import traceback
 from pathlib import Path
 
-from redteam.quality_methods import EXP, PROPOSED, reference, original_training, realignment, remove_quadratic
+from redteam.quality_methods import EXP, PROPOSED, reference, original_training, realignment, remove_quadratic, radii_only
 from redteam.shortcuts import make_shortcut, after_train
 
 ROOT = Path('/home/user')
@@ -55,11 +55,19 @@ def main(name):
             pred = original_training(7, 24)
         elif name == 'better_alignment':
             pred = realignment()
+        elif name == 'better_alignment_train6':
+            pred = realignment(trials=6)
+        elif name == 'better_alignment_train24':
+            pred = realignment(trials=24)
+        elif name == 'better_statistical_atlas':
+            pred = realignment(trials=24, statistical=True)
         elif name == 'weaker_linear':
             pred = reference()
             pred['experiments'][EXP]['methods'][PROPOSED] = copy.deepcopy(pred['experiments'][EXP]['methods']['unlearned_linear_baseline'])
         elif name == 'weaker_noquadratic':
             pred = remove_quadratic()
+        elif name == 'weaker_radii_only':
+            pred = radii_only()
         else:
             pred = make_shortcut(name)
         Path('outputs/method').mkdir(parents=True, exist_ok=True)
@@ -84,12 +92,14 @@ def main(name):
             (folder/f'{phase}.log').write_text(result.stdout+result.stderr)
             evidence[f'{phase}_returncode'] = result.returncode
             evidence[f'{phase}_output_written'] = target.exists()
+            evidence[f'{phase}_output_exists'] = target.exists()
             if result.returncode:
                 evidence[f'{phase}_error'] = result.stderr[-2200:]
             if target.exists():
                 (folder/f'scores_{phase}.json').write_bytes(target.read_bytes())
                 if phase == 'test' and 'prewritten_scores_sha256' in evidence:
                     evidence['prewritten_scores_survived'] = evidence['prewritten_scores_sha256'] == hashlib.sha256(target.read_bytes()).hexdigest()
+                    evidence['test_output_written'] = not evidence['prewritten_scores_survived']
             if phase == 'train':
                 after_train(name)
                 pred_final = json.loads(Path('outputs/method/predictions.json').read_text())

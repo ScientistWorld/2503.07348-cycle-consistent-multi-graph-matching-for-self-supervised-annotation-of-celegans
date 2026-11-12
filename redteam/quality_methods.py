@@ -50,7 +50,7 @@ def affine_fit(source, target, labeling):
         source.radii)
 
 
-def realignment():
+def realignment(trials=None, statistical=False):
     """Repair omitted affine registration while retaining learned GM + atlas."""
     install()
     train = load_split('data/cellmatch_sample/train', 12)
@@ -67,7 +67,12 @@ def realignment():
               for i in range(len(train))]
     pivot = int(np.argmax(scores))
     target = train[pivot]
-    for params, quadratic in ((unlearned, False), (learned, True)):
+    for phase in (0, 1):
+        if phase == 1 and trials is not None:
+            # Repair the reproduction's missing ordering: align before BO.
+            learned = m.learn_params(train[:6], trials, 7, 'sync', 12000.0)
+            pred['metadata']['params'] = asdict(learned)
+        params, quadratic = (unlearned, False) if phase == 0 else (learned, True)
         for iteration in range(7):
             print('affine registration', quadratic, iteration, flush=True)
             train = [affine_fit(w, target, m.pairwise_match(target, w, params, sparse=quadratic, quadratic=quadratic))
@@ -77,12 +82,75 @@ def realignment():
     cliques = m.synchronize_cliques(train, pairs)
     labels = m.induce_clique_labels(cliques, train)
     atlas = m.build_atlas(cliques, train, labels)
+    labelings = (statistical_match(cliques, train, atlas, test, learned)
+                 if statistical else m.match_atlas(atlas, test, learned, quadratic=True))
     pred['experiments'][EXP]['methods'][PROPOSED] = {
         'atlas_labels': atlas.names,
-        'test_labelings': m.match_atlas(atlas, test, learned, quadratic=True),
+        'test_labelings': labelings,
         'pre_atlas_accuracies': m.evaluate_pre_atlas(cliques, labels, train)}
     pred['metadata']['audit_variant'] = 'feature-only affine registration, fixed seed-7 costs and fixed oracle'
     pred['metadata']['semantic_labels_used_for_training'] = False
+    return pred
+
+
+def statistical_match(cliques, train, atlas, test, params):
+    """Estimate clique-specific diagonal variances after feature-only fitting.
+
+    The reproduction lacks the paper's nucleus-specific atlas statistics. This
+    genuine variant repairs that omission with shrinkage for only 12 worms.
+    No semantic identities enter covariance estimates or assignment costs.
+    """
+    coordinates = np.stack([[train[wid].centroids[clique[wid]] for clique in cliques]
+                            for wid in range(len(train))])
+    radii = np.stack([[train[wid].radii[clique[wid]] for clique in cliques]
+                      for wid in range(len(train))])
+    def regularize(values):
+        variances = np.var(values, axis=0, ddof=1)
+        return 0.8*variances + 0.2*np.maximum(variances.mean(axis=0), 1e-3)
+    cen_var = regularize(coordinates)
+    rad_var = regularize(radii)
+    neighbors = np.asarray(m.nearest_neighbors(atlas, params.neighbor_count, params))
+    offsets = coordinates[:,:,None,:] - coordinates[:,neighbors,:]
+    off_var = regularize(offsets)
+    mean_offsets = offsets.mean(axis=0)
+    weights = np.asarray([np.linalg.norm(params.cen_cov), np.linalg.norm(params.rad_cov), np.linalg.norm(params.off_cov)])
+    weights *= np.sqrt(3)/np.linalg.norm(weights)
+    out = []
+    for worm in test:
+        base = weights[0]*np.sum((atlas.centroids[:,None,:]-worm.centroids[None,:,:])**2/cen_var[:,None,:],axis=-1)
+        base += weights[1]*np.sum((atlas.radii[:,None,:]-worm.radii[None,:,:])**2/rad_var[:,None,:],axis=-1)
+        labeling = m.solve_assignment(base)
+        target_indices = np.arange(len(worm.names))[None,:]
+        for _ in range(2):
+            accum = np.zeros_like(base)
+            used = np.zeros_like(base)
+            for slot in range(neighbors.shape[1]):
+                matches = np.asarray(labeling)[neighbors[:,slot]]
+                target_offsets = worm.centroids[None,:,:] - worm.centroids[matches][:,None,:]
+                values = np.sum((mean_offsets[:,slot,None,:]-target_offsets)**2/off_var[:,slot,None,:],axis=-1)
+                valid = matches[:,None] != target_indices
+                accum += np.where(valid,values,0)
+                used += valid
+            labeling = m.solve_assignment(base + weights[2]*np.divide(accum,used,out=np.zeros_like(base),where=used>0))
+        out.append(labeling)
+    return out
+
+
+def radii_only():
+    """Clearly weaker spatial-feature ablation: remove centroids and offsets."""
+    install()
+    pred = reference()
+    train = load_split('data/cellmatch_sample/train', 12)
+    test = load_split('data/cellmatch_sample/test', 6)
+    params = m.Params(**pred['metadata']['params'])
+    params.w_cen = 0
+    params.w_off = 0
+    pairs = m.all_pairwise(train, params, sparse=False, quadratic=False)
+    cliques = m.synchronize_cliques(train, pairs)
+    labels = m.induce_clique_labels(cliques, train)
+    atlas = m.build_atlas(cliques, train, labels)
+    pred['experiments'][EXP]['methods'][PROPOSED] = {
+        'atlas_labels':labels, 'test_labelings':m.match_atlas(atlas,test,params,quadratic=False)}
     return pred
 
 
