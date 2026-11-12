@@ -3,7 +3,7 @@
 # and score it on the visible slice.
 #
 # Usage: bash scripts/method.sh [extra args for method/cycle_mgm.py]
-# Defaults: seed 7, 8 learning worms, 40/40/12 BO trials, output
+# Defaults: seed 7, 6 learning worms, 30/30/10 BO trials, output
 # outputs/our_unsupervised_atlas/predictions.json (single CPU: ~1 hour).
 set -e
 cd /home/user

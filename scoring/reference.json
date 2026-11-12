@@ -1,82 +1,78 @@
 {
   "experiments": {
     "scaled_manual_segmentation": {
-      "description": "Manual-segmentation C. elegans atlas annotation. Paper numbers are from the 100-train/100-test main setting and training-set ablations; this workspace runs the same evaluation on the tracked preprocessed sample.",
+      "description": "Label-free C. elegans cell-identity annotation from manually segmented nuclei. An identity reference is built from 12 unlabeled pool worms; held-out worms (10 hidden test worms, 4 visible dev worms) are annotated with it, and every nucleus' assigned identity is checked against its biological name (558 nuclei per worm). Scaled from the paper's 100 training / 100 test worms: the paper numbers below are its full-scale results and are not expected at this scale.",
       "weight": 1.0,
       "primary_metric": "atlas_accuracy_mean",
+      "_scale_note": "Paper: 100 training worms (15 for parameter learning, 500 BO trials per stage), 100 test worms. Gym: 12 pool worms (6 for parameter learning, 30/30/10 BO trials), 10 hidden test worms, same 558-nucleus manual segmentations of the Li et al. dataset. Accuracy grows with the number of training worms (paper Fig. 5), so the gym reference sits below 0.961.",
       "metrics": {
         "atlas_accuracy_mean": {
           "higher_is_better": true,
           "coefficient": 1.0,
-          "description": "Mean biological cell-identity accuracy on held-out worms."
+          "description": "Mean over held-out worms of the fraction of nuclei assigned their correct biological identity (unassigned nuclei count as wrong)."
         },
         "atlas_accuracy_min": {
           "higher_is_better": true,
           "coefficient": 0.25,
-          "description": "Worst held-out worm accuracy, included to catch methods tuned to only a subset of worms."
+          "description": "Accuracy of the worst held-out worm; rewards methods that annotate every worm well, not only on average."
         },
         "atlas_accuracy_std": {
           "higher_is_better": false,
-          "coefficient": -0.1,
-          "description": "Across-worm accuracy variability, penalizing brittle performance."
-        },
-        "invalid_assignment_rate": {
-          "higher_is_better": false,
-          "coefficient": -0.2,
-          "description": "Fraction of atlas cells assigned to missing, malformed, or out-of-range target indices."
+          "coefficient": 0.0,
+          "description": "Diagnostic: population standard deviation of per-worm accuracy (not ranked)."
         },
         "pre_atlas_accuracy_mean": {
           "higher_is_better": true,
           "coefficient": 0.0,
-          "description": "Diagnostic training-worm clique-label accuracy before atlas-to-test matching."
-        },
-        "pre_atlas_accuracy_std": {
-          "higher_is_better": false,
-          "coefficient": 0.0,
-          "description": "Diagnostic variability of pre-atlas training-worm clique-label accuracy."
-        },
-        "atlas_minus_preatlas": {
-          "higher_is_better": true,
-          "coefficient": 0.0,
-          "description": "Diagnostic difference between held-out atlas accuracy and pre-atlas training accuracy."
+          "description": "Diagnostic (hidden side only): accuracy of the submitted pool correspondences themselves, i.e. the fraction of pool nuclei whose correspondence group carries their name (not ranked)."
         },
         "gap_to_supervised_oracle": {
           "higher_is_better": false,
-          "coefficient": -0.5,
-          "description": "Accuracy gap to the supervised atlas oracle on the same held-out slice."
-        },
-        "semantic_labels_used_for_training": {
-          "higher_is_better": false,
-          "coefficient": -1.0,
-          "description": "Indicator that semantic labels were used to construct or tune the unsupervised atlas."
+          "coefficient": 0.0,
+          "description": "Diagnostic: fixed supervised comparator's mean accuracy minus the method's mean accuracy on the same worms (not ranked; the comparator is frozen in eval/, so this is a shifted copy of the primary metric)."
         }
       },
       "results": {
         "unlearned_linear_baseline": {
-          "type": "baseline",
-          "atlas_accuracy_mean": 0.955,
-          "atlas_accuracy_std": 0.031,
-          "pre_atlas_accuracy_mean": 0.949,
-          "pre_atlas_accuracy_std": 0.033,
-          "atlas_minus_preatlas": 0.006,
-          "semantic_labels_used_for_training": 0.0
+          "type": "baseline"
         },
         "our_unsupervised_atlas": {
           "type": "proposed",
           "atlas_accuracy_mean": 0.961,
           "atlas_accuracy_std": 0.020,
           "pre_atlas_accuracy_mean": 0.966,
-          "pre_atlas_accuracy_std": 0.016,
-          "atlas_minus_preatlas": 0.006,
-          "gap_to_supervised_oracle": 0.003,
-          "semantic_labels_used_for_training": 0.0
+          "gap_to_supervised_oracle": 0.003
         },
         "supervised_oracle_atlas": {
           "type": "baseline",
           "atlas_accuracy_mean": 0.964,
-          "atlas_accuracy_std": 0.019,
-          "semantic_labels_used_for_training": 1.0
+          "atlas_accuracy_std": 0.019
         }
+      },
+      "_paper_reported": {
+        "table3_test_set_100_100": {
+          "supervised_atlas_li_et_al_2024": {"atlas_accuracy_mean": 0.93, "atlas_accuracy_std": 0.11},
+          "our_supervised_atlas": {"atlas_accuracy_mean": 0.964, "atlas_accuracy_std": 0.019},
+          "our_unsupervised_atlas": {"atlas_accuracy_mean": 0.961, "atlas_accuracy_std": 0.020}
+        },
+        "table1_training_set_ablations": {
+          "linear_dense_learned": {"pre_atlas_accuracy_mean": 0.949, "atlas_accuracy_mean": 0.955, "atlas_accuracy_std": 0.031},
+          "linear_sparse_learned": {"pre_atlas_accuracy_mean": 0.949, "atlas_accuracy_mean": 0.956, "atlas_accuracy_std": 0.030},
+          "unlearned_quadratic": {"pre_atlas_accuracy_mean": 0.944, "atlas_accuracy_mean": 0.964, "atlas_accuracy_std": 0.018},
+          "full_pipeline": {"pre_atlas_accuracy_mean": 0.966, "atlas_accuracy_mean": 0.972, "atlas_accuracy_std": 0.015}
+        },
+        "table2_loss_functions": {
+          "discrete_cycle_loss": {"pre_atlas_accuracy_mean": 0.965, "atlas_accuracy_mean": 0.970},
+          "synchronization_loss": {"pre_atlas_accuracy_mean": 0.966, "atlas_accuracy_mean": 0.972}
+        },
+        "tableC1_cost_term_ablations": {
+          "centroid_only": {"pre_atlas_accuracy_mean": 0.953, "atlas_accuracy_mean": 0.960},
+          "radii_only": {"pre_atlas_accuracy_mean": 0.260, "atlas_accuracy_mean": 0.060},
+          "no_offset": {"pre_atlas_accuracy_mean": 0.953, "atlas_accuracy_mean": 0.960},
+          "offset_only": {"pre_atlas_accuracy_mean": 0.967, "atlas_accuracy_mean": 0.958},
+          "single_realignment": {"pre_atlas_accuracy_mean": 0.963, "atlas_accuracy_mean": 0.971}
+        },
+        "stardist_segmentation": {"supervised_atlas_accuracy_mean": 0.916, "unsupervised_atlas_accuracy_mean": 0.829}
       }
     }
   }

@@ -65,15 +65,24 @@ def log(message: str) -> None:
 
 
 def pairwise_all(worms, params: gm.WormParams, quadratic: bool, seed: int) -> dict:
-    out = {}
-    for k, (a, b) in enumerate(combinations(range(len(worms)), 2)):
-        out[(a, b)] = gm.match_worms(worms[a], worms[b], params, quadratic, seed=seed * 1009 + k)
-    return out
+    keys = list(combinations(range(len(worms)), 2))
+    labs = gm.match_worms_many([(worms[a], worms[b]) for a, b in keys], params, quadratic,
+                               [seed * 1009 + k for k in range(len(keys))])
+    return dict(zip(keys, labs))
 
 
-def sync_objective(worms, labelings: dict, iterations: int = 3) -> float:
-    sizes = [w.n for w in worms]
-    return float(gm.synchronize(labelings, sizes, iterations=iterations).evaluate())
+SYNC_ITERATIONS_LOSS = 1  # GREEDA restarts per loss evaluation (pylibmgm default: 3)
+
+
+def sync_objective(worms, labelings: dict, params: gm.WormParams | None = None,
+                   iterations: int = SYNC_ITERATIONS_LOSS) -> float:
+    """Synchronisation loss (Sec. 3.1): objective of the cycle-consistent
+    approximation of the independently solved pairwise matchings. Dense problems
+    use the dense mode; sparsified problems use the sparse mode (Sec. 4.1)."""
+    if params is None or params.k_min <= 0:
+        sizes = [w.n for w in worms]
+        return float(gm.synchronize(labelings, sizes, iterations=iterations).evaluate())
+    return float(gm.synchronize_sparse(worms, params, labelings, iterations=iterations).evaluate())
 
 
 def star_center(worms, seed: int) -> int:
@@ -101,8 +110,9 @@ def realign(worms: list, target, params: gm.WormParams, quadratic: bool, iterati
     for it in range(iterations):
         t0 = time.time()
         shift = []
-        for k, w in enumerate(worms):
-            lab = gm.match_worms(target, w, params, quadratic, seed=seed * 7919 + it * 131 + k)
+        labs = gm.match_worms_many([(target, w) for w in worms], params, quadratic,
+                                   [seed * 7919 + it * 131 + k for k in range(len(worms))])
+        for k, (w, lab) in enumerate(zip(worms, labs)):
             idx = np.nonzero(lab >= 0)[0]
             r, o = gm.affine_fit_diag(target.centroids[idx], w.centroids[lab[idx]], cen_prec, off_prec)
             new = gm.apply_affine(w.centroids, r, o)
@@ -174,7 +184,7 @@ def learn_parameters(worms, trials: tuple[int, int, int], seed: int, max_avg_ass
                 "tau_rad": trial.suggest_int("tau_rad", 1, 100),
             }
             p = stage2_params(values)
-            loss = sync_objective(worms, pairwise_all(worms, p, quadratic=False, seed=seed))
+            loss = sync_objective(worms, pairwise_all(worms, p, quadratic=False, seed=seed), p)
             sizes = [gm.allowed_assignments(worms[a], worms[b], p)
                      for a, b in combinations(range(len(worms)), 2)]
             mean_assign = float(np.mean(sizes))
@@ -205,7 +215,7 @@ def learn_parameters(worms, trials: tuple[int, int, int], seed: int, max_avg_ass
         def objective3(trial):
             p = copy.deepcopy(params)
             p.off_var = tuple(float(trial.suggest_int(f"off_{a}", 1, 200)) for a in "xyz")
-            loss = sync_objective(worms, pairwise_all(worms, p, quadratic=True, seed=seed))
+            loss = sync_objective(worms, pairwise_all(worms, p, quadratic=True, seed=seed), p)
             log(f"BO stage 3 trial {trial.number + 1}/{trials[2]}: loss {loss:.0f} off {p.off_var}")
             return loss
 
@@ -253,13 +263,9 @@ def build_unsupervised_atlas(pool, membership, weights, shrinkage: float = 0.0) 
 
 
 def annotate(atlas: gm.Atlas, worms, params: gm.WormParams, quadratic: bool, seed: int) -> dict:
-    out = {}
-    for k, w in enumerate(worms):
-        lab = gm.match_atlas(atlas, w, target_nbr_var=params.cen_var,
-                             target_nbr_k=params.neighbor_count, quadratic=quadratic,
-                             seed=seed * 104729 + k)
-        out[w.worm_id] = gm.node_labels(atlas, lab, w.n)
-    return out
+    labs = gm.match_atlas_many(atlas, list(worms), params.cen_var, params.neighbor_count, quadratic,
+                               [seed * 104729 + k for k in range(len(worms))])
+    return {w.worm_id: gm.node_labels(atlas, lab, w.n) for w, lab in zip(worms, labs)}
 
 
 # --------------------------------------------------------------------------
@@ -368,7 +374,9 @@ def run(args: argparse.Namespace) -> None:
 
     # 5. Multi-graph matching of the pool -> cycle-consistent cliques.
     mgm_params = copy.deepcopy(params)
-    mgm_params.c0 = C0_MGM
+    # App. B: c0 = 40 after cost learning (tuned to the learned cost scale); the
+    # unlearned ablation keeps the large constant so that every nucleus is matched.
+    mgm_params.c0 = C0_LEARN if args.mode == "unlearned_quadratic" else C0_MGM
     mgm_params.w_cen, mgm_params.w_rad, mgm_params.w_off = ablate
     mgm_path = work / f"mgm_{args.lambda_scale.replace(',', '_')}.json"
     pool = groups["pool"]
@@ -434,8 +442,8 @@ def main() -> None:
                         help="comma list of prealign,bo,postalign,mgm checkpoints to copy from --reuse")
     parser.add_argument("--mode", choices=["full", "linear", "unlearned_quadratic"], default="full")
     parser.add_argument("--seed", type=int, default=7)
-    parser.add_argument("--learn-worms", type=int, default=8)
-    parser.add_argument("--trials", default="40,40,12", help="BO trials for stages 1,2,3")
+    parser.add_argument("--learn-worms", type=int, default=6)
+    parser.add_argument("--trials", default="30,30,10", help="BO trials for stages 1,2,3 (paper: 500 each)")
     parser.add_argument("--max-avg-assignments", type=float, default=12000.0)
     parser.add_argument("--loss-tolerance", type=float, default=0.0005)
     parser.add_argument("--lambda-scale", default="1,1,1",

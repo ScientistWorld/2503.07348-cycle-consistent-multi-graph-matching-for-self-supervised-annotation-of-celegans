@@ -23,8 +23,11 @@ matched to node ``i`` of the first graph, or ``-1``.
 """
 from __future__ import annotations
 
+import atexit
 import logging
 import math
+import multiprocessing as mp
+import os
 from dataclasses import asdict, dataclass, fields
 
 import numpy as np
@@ -263,6 +266,55 @@ def allowed_assignments(ref, tar, p: WormParams) -> int:
 
 
 # --------------------------------------------------------------------------
+# Parallel execution (independent pairwise problems)
+# --------------------------------------------------------------------------
+
+_POOL = None
+
+
+def n_workers() -> int:
+    env = os.environ.get("GYM_WORKERS")
+    if env:
+        return max(1, int(env))
+    try:
+        return max(1, len(os.sched_getaffinity(0)))
+    except AttributeError:  # pragma: no cover
+        return max(1, os.cpu_count() or 1)
+
+
+def parallel_map(fn, tasks: list) -> list:
+    """Map over independent tasks with a persistent spawn-based process pool.
+    Results are identical to the sequential map (every task carries its seed)."""
+    global _POOL
+    workers = min(n_workers(), len(tasks))
+    if workers <= 1:
+        return [fn(t) for t in tasks]
+    if _POOL is None:
+        _POOL = mp.get_context("spawn").Pool(n_workers())
+        atexit.register(_POOL.terminate)
+    return _POOL.map(fn, tasks, chunksize=1)
+
+
+def _match_worms_task(task):
+    ref, tar, p, quadratic, seed = task
+    return match_worms(ref, tar, p, quadratic, seed=seed)
+
+
+def match_worms_many(pairs: list, p: WormParams, quadratic: bool, seeds: list) -> list:
+    """Solve many worm-to-worm problems (list of (ref, tar)) in parallel."""
+    return parallel_map(_match_worms_task, [(a, b, p, quadratic, s) for (a, b), s in zip(pairs, seeds)])
+
+
+def _match_atlas_task(task):
+    atlas, tar, var, k, quadratic, seed = task
+    return match_atlas(atlas, tar, target_nbr_var=var, target_nbr_k=k, quadratic=quadratic, seed=seed)
+
+
+def match_atlas_many(atlas, targets: list, var, k: int, quadratic: bool, seeds: list) -> list:
+    return parallel_map(_match_atlas_task, [(atlas, t, var, k, quadratic, s) for t, s in zip(targets, seeds)])
+
+
+# --------------------------------------------------------------------------
 # Multi-graph synchronization
 # --------------------------------------------------------------------------
 
@@ -281,6 +333,25 @@ def synchronize(labelings: dict, sizes: list[int], iterations: int = 3, opt_leve
     for (a, b), lab in labelings.items():
         solution.set_solution((int(a), int(b)), [int(x) for x in lab])
     return synchronize_solution(model, solution, feasible=feasible, iterations=iterations,
+                                opt_level=opt_level)
+
+
+def synchronize_sparse(worms: list, p: WormParams, labelings: dict, iterations: int = 1, opt_level=None):
+    """Sparse synchronisation mode: the cycle-consistent approximation may only use
+    assignments allowed by the (sparsified) pairwise problems of ``p``."""
+    if opt_level is None:
+        opt_level = OptimizationLevel.DEFAULT
+    model = pylibmgm.MgmModel()
+    for (a, b) in sorted(labelings):
+        d_cen, d_rad = worm_unary(worms[a], worms[b], p)
+        cost = p.w_cen * d_cen + p.w_rad * d_rad
+        mask = sparsity_mask(cost, d_cen, d_rad, p.k_min, p.tau_cen, p.tau_rad)
+        model.add_model(build_gm_model(cost, mask, p.c0, worms[a].centroids, worms[b].centroids,
+                                       None, None, None, 0.0, gids=(a, b)))
+    solution = pylibmgm.MgmSolution(model)
+    for (a, b), lab in labelings.items():
+        solution.set_solution((int(a), int(b)), [int(x) for x in lab])
+    return synchronize_solution(model, solution, feasible=True, iterations=iterations,
                                 opt_level=opt_level)
 
 

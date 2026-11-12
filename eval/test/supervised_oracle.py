@@ -35,6 +35,15 @@ def log(message: str) -> None:
     print(f"[supervised-oracle {time.strftime('%H:%M:%S')}] {message}", flush=True)
 
 
+def annotate_task(task):
+    """Iterative worm-to-atlas matching + re-alignment, then the final matching."""
+    atlas, cur, seed, iterations = task
+    for it in range(iterations):
+        lab = gm.match_atlas(atlas, cur, quadratic=True, seed=seed + it)
+        cur, _ = gm.realign_to_atlas(atlas, cur, lab)
+    return gm.match_atlas(atlas, cur, quadratic=True, seed=seed + iterations)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", default="outputs/_comparators/supervised_oracle_atlas/predictions.json")
@@ -89,15 +98,12 @@ def main() -> None:
 
     r_mean = np.mean([t[0] for t in transforms], axis=0)
     o_mean = np.mean([t[1] for t in transforms], axis=0)
-    labelings = {}
-    for k, worm in enumerate(raw["dev"] + raw["test"]):
-        cur = worm.with_centroids(gm.apply_affine(worm.centroids, r_mean, o_mean))
-        for it in range(args.iterations):
-            lab = gm.match_atlas(atlas, cur, quadratic=True, seed=args.seed * 31 + k * 7 + it)
-            cur, _ = gm.realign_to_atlas(atlas, cur, lab)
-        lab = gm.match_atlas(atlas, cur, quadratic=True, seed=args.seed * 31 + k * 7 + args.iterations)
-        labelings[worm.worm_id] = gm.node_labels(atlas, lab, worm.n).tolist()
-        log(f"annotated {worm.worm_id}")
+    held = raw["dev"] + raw["test"]
+    tasks = [(atlas, w.with_centroids(gm.apply_affine(w.centroids, r_mean, o_mean)), args.seed * 31 + k * 7,
+              args.iterations) for k, w in enumerate(held)]
+    labs = gm.parallel_map(annotate_task, tasks)
+    labelings = {w.worm_id: gm.node_labels(atlas, lab, w.n).tolist() for w, lab in zip(held, labs)}
+    log(f"annotated {len(held)} held-out worms")
     output = {
         "format": "cellid-atlas-v1",
         "pool_cliques": {w.worm_id: [index[n] for n in names[i]] for i, w in enumerate(pool)},
