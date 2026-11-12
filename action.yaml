@@ -5,4 +5,4 @@ action: submit
 gpus: 0
 test: false
 milestone: core_claim
-notes: "Follow-up: dev-label subset shortcut (alone + hybrid), transductive MGM shortcut, 2x BO diagnostic; re-audit all cases with restricted dev labels"
+notes: "Annotator layout: retrain reference seed 7 on final code, rebuild variants from checkpoints, freeze comparators, audit all cases via per-worm annotate.sh"
