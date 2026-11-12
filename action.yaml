@@ -1,2 +1,8 @@
-action: done
-notes: "Audit complete: genuine quality changes move scores beyond seed spread, but visible labels, editable comparisons, missing metrics, and unchecked flags admit high-scoring shortcuts; 34 cases and restoration evidence committed."
+# Once you set action to 'submit' or 'done', STOP immediately.
+# Do NOT sleep, poll, or wait for jobs. The system reads this file
+# only after your turn ends.
+action: pending
+gpus: 0
+test: false
+milestone: core_claim
+notes: ""
